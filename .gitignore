@@ -147,3 +147,17 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Go
+*.exe
+*.test
+*.out
+
+# Go application binaries
+/stockflow
+/backend/stockflow
+
+# IDE and operating system
+.idea/
+.DS_Store
+Thumbs.db
