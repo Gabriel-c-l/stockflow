@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Backend environment variables
+/backend/.env
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -161,3 +164,9 @@ vite.config.ts.timestamp-*
 .idea/
 .DS_Store
 Thumbs.db
+
+# AI assistant configuration
+.claude/
+.windsurf/
+.agents/
+skills-lock.json
