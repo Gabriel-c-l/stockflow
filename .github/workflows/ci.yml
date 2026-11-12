@@ -65,6 +65,9 @@ jobs:
       - name: Test with coverage
         run: npm test
 
+      - name: System tests
+        run: npm run test:system
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:

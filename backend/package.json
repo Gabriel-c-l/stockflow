@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "db:test": "tsx src/scripts/test-database.ts",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "test:system": "vitest run --config vitest.system.config.mts --coverage=false"
   },
   "keywords": [],
   "author": "",
