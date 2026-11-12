@@ -74,6 +74,5 @@ jobs:
             -Dsonar.organization=gabriel-c-l
             -Dsonar.projectKey=Gabriel-c-l_stockflow
             -Dsonar.projectBaseDir=backend
-            -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.exclusions=src/generated/prisma/**,src/**/*.test.ts
+            -Dsonar.exclusions=src/generated/prisma/**,src/**/*.test.ts,prisma/migrations/**
