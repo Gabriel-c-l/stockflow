@@ -6,21 +6,48 @@ import { stockMovementRouter } from "./routes/stock-movement.routes";
 
 dotenv.config();
 
-export const app = express();
 const port = Number(process.env.PORT) || 3333;
 
-app.use(cors());
-app.use(express.json());
-app.use("/products", productRouter);
-app.use("/stock-movements", stockMovementRouter);
+const getAllowedOrigins = (): string[] =>
+  (process.env.CORS_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
 
-app.get("/health", (_request, response) => {
-  response.status(200).json({
-    status: "ok",
-    service: "stockflow-api",
-    timestamp: new Date().toISOString(),
+export const createApp = (
+  allowedOrigins: string[] = getAllowedOrigins(),
+): express.Express => {
+  const app = express();
+
+  app.disable("x-powered-by");
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error("Origin is not allowed by CORS."));
+      },
+    }),
+  );
+  app.use(express.json());
+  app.use("/products", productRouter);
+  app.use("/stock-movements", stockMovementRouter);
+
+  app.get("/health", (_request, response) => {
+    response.status(200).json({
+      status: "ok",
+      service: "stockflow-api",
+      timestamp: new Date().toISOString(),
+    });
   });
-});
+
+  return app;
+};
+
+export const app = createApp();
 
 export const startServer = (): void => {
   app.listen(port, () => {
