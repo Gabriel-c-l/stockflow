@@ -1,0 +1,63 @@
+@startuml
+title StockFlow - Sequencia: Registro de Saida de Estoque
+
+actor "Operador" as Operator
+participant "API / stock-movement.routes" as Route
+participant "StockMovementController" as Controller
+participant "StockMovementService" as Service
+participant "StockMovementRepository" as Repository
+participant "Prisma / PostgreSQL" as Database
+
+Operator -> Route: POST /stock-movements\n{ productId, type=EXIT, quantity }
+Route -> Controller: create(request, response)
+Controller -> Controller: createStockMovementSchema.parse(request.body)
+
+alt Dados invalidos
+  Controller --> Route: HTTP 400
+  Route --> Operator: HTTP 400
+else Dados validos
+  Controller -> Service: createStockMovement(input)
+  Service -> Database: prisma.$transaction(callback)
+  activate Database
+
+  Service -> Repository: findProductById(transaction, productId)
+  Repository -> Database: product.findUnique(...)
+  Database --> Repository: produto ou null
+  Repository --> Service: produto ou null
+
+  alt Produto inexistente
+    Service -> Service: lança NOT_FOUND
+    Database --> Database: rollback da transacao
+    deactivate Database
+    Service --> Controller: NOT_FOUND
+    Controller --> Route: HTTP 404
+    Route --> Operator: HTTP 404
+  else Produto existente
+    Service -> Repository: decreaseProductQuantity(transaction, productId, quantity)
+    Repository -> Database: product.updateMany\nquantity >= quantidade solicitada
+    Database --> Repository: count
+
+    alt count = 0\nestoque insuficiente ou concorrencia
+      Repository --> Service: update.count = 0
+      Service -> Service: lança INSUFFICIENT_STOCK
+      Database --> Database: rollback da transacao
+      deactivate Database
+      Service --> Controller: INSUFFICIENT_STOCK
+      Controller --> Route: HTTP 409
+      Route --> Operator: HTTP 409
+    else count = 1
+      Repository --> Service: update.count = 1
+      Service -> Repository: createStockMovement(transaction, input)
+      Repository -> Database: stockMovement.create(...)
+      Database --> Repository: movimentacao criada
+      Repository --> Service: movimentacao
+      Database --> Database: commit da transacao
+      deactivate Database
+      Service --> Controller: movimentacao
+      Controller --> Route: HTTP 201
+      Route --> Operator: HTTP 201
+    end
+  end
+end
+
+@enduml

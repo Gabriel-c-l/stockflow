@@ -1,0 +1,138 @@
+@startuml
+title StockFlow - Processo de Gestao de Estoque
+
+|Operador de estoque|
+start
+:Cadastrar produto;
+
+|Sistema StockFlow|
+:Validar dados;
+
+if (Dados validos?) then (não)
+  |Operador de estoque|
+  :Corrigir dados;
+  stop
+else (sim)
+  |Banco de dados|
+  :Persistir produto com saldo zero;\naplicar restrição UNIQUE do SKU;
+  :Devolver sucesso ou conflito P2002;
+
+  |Sistema StockFlow|
+  if (Restrição UNIQUE violada?) then (sim)
+    :Tratar conflito como SKU duplicado;
+    |Operador de estoque|
+    :Receber HTTP 409;
+    stop
+  else (não)
+    :Produto cadastrado;
+  endif
+endif
+
+|Operador de estoque|
+:Registrar entrada;
+|Sistema StockFlow|
+:Validar produto e quantidade;
+|Banco de dados|
+  :Iniciar transação;
+  :Consultar produto;
+  :Devolver produto ou ausência;
+|Sistema StockFlow|
+if (Produto existe?) then (não)
+  :Retornar HTTP 404;
+  |Banco de dados|
+  :Executar rollback;
+  stop
+else (sim)
+  |Banco de dados|
+  :Atualizar saldo com ENTRY;
+  :Registrar movimentação ENTRY;
+  :Confirmar transação;
+endif
+
+|Operador de estoque|
+:Consultar saldo;
+|Sistema StockFlow|
+:Obter produto e saldo;
+
+|Operador de estoque|
+:Decidir se havera saida;
+if (Havera saida?) then (não)
+  stop
+else (sim)
+  :Solicitar saída;
+  |Sistema StockFlow|
+  :Validar dados da saída;
+  |Banco de dados|
+  :Iniciar transação;
+  :Consultar produto;
+  :Devolver produto ou ausência;
+  |Sistema StockFlow|
+  if (Produto existe?) then (não)
+    :Retornar HTTP 404;
+    |Banco de dados|
+    :Executar rollback;
+    stop
+  else (sim)
+    :Verificar disponibilidade;
+  endif
+
+  |Sistema StockFlow|
+  :Há outra saída simultânea solicitada?;
+  if (Duas saídas concorrentes?) then (sim)
+    |Banco de dados|
+    :Saldo inicial disponível = 10;
+    :Ambas executam atualização condicional;\nquantity >= 7;
+    :Primeira atualização afeta uma linha;
+    :Segunda atualização afeta zero linhas;
+    |Sistema StockFlow|
+    :Primeira operação aprovada;
+    |Banco de dados|
+    :Registrar saída de 7;
+    :Confirmar primeira transação;
+    |Sistema StockFlow|
+    :Retornar HTTP 201;
+    :Segunda operação recusada;
+    |Banco de dados|
+    :Executar rollback da segunda transação;
+    |Sistema StockFlow|
+    :Retornar HTTP 409;
+    :Saldo final = 3;
+    :Histórico recebe apenas uma saída de 7;
+    stop
+  else (não)
+    |Banco de dados|
+    :Executar atualização condicional;\nquantity >= quantidade solicitada;
+    :Devolver quantidade de linhas atualizadas;
+  endif
+  |Sistema StockFlow|
+  if (Nenhuma linha atualizada?) then (sim)
+    :Retornar HTTP 409;
+    :Não alterar saldo;
+    :Não registrar movimentação;
+    |Banco de dados|
+    :Executar rollback;
+    stop
+  else (não)
+    |Banco de dados|
+    :Registrar movimentação EXIT;
+    :Confirmar transação;
+    |Sistema StockFlow|
+    :Retornar HTTP 201;
+  endif
+endif
+
+|Sistema StockFlow|
+:Preservar saldo e histórico;
+|Operador de estoque|
+:Consultar histórico;
+|Sistema StockFlow|
+:Retornar movimentações;
+stop
+
+legend right
+  Resumo do caminho concorrente:
+  saldo 10, duas saídas de 7, uma linha atualizada,
+  uma linha não atualizada, HTTP 201/409 e saldo final 3.
+end legend
+
+@enduml

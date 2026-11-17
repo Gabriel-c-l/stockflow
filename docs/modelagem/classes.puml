@@ -1,0 +1,32 @@
+@startuml
+title StockFlow - Modelo de Classes do Prisma
+
+enum StockMovementType {
+  ENTRY
+  EXIT
+}
+
+class Product {
+  +id: String / UUID
+  +sku: String
+  +name: String
+  +description: String?
+  +quantity: Int = 0
+  +minStock: Int = 0
+  +isActive: Boolean = true
+  +createdAt: DateTime
+  +updatedAt: DateTime
+}
+
+class StockMovement {
+  +id: String / UUID
+  +productId: String / UUID
+  +type: StockMovementType
+  +quantity: Int
+  +notes: String?
+  +createdAt: DateTime
+}
+
+Product "1" -- "0..*" StockMovement : stockMovements
+
+@enduml

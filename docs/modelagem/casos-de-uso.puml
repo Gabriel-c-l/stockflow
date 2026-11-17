@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+title StockFlow - Casos de Uso da API
+
+actor "Operador de estoque" as Operator
+actor "Gestor de estoque" as Manager
+
+rectangle "API StockFlow" {
+  usecase "Cadastrar produto\n(RF01)" as UC01
+  usecase "Listar produtos\n(RF02)" as UC02
+  usecase "Consultar produto\n(RF03)" as UC03
+  usecase "Registrar entrada\n(RF04)" as UC04
+  usecase "Registrar saída\n(RF05)" as UC05
+  usecase "Consultar histórico\n(RF06)" as UC06
+  usecase "Gerar relatório de inventário\n(RF07 - futuro)" as UC07
+}
+
+Operator --> UC01
+Operator --> UC02
+Operator --> UC03
+Operator --> UC04
+Operator --> UC05
+Operator --> UC06
+
+Manager --> UC02
+Manager --> UC03
+Manager --> UC06
+Manager --> UC07
+
+note bottom of UC07
+  Não implementado no backend atual.
+  Não representa um endpoint existente.
+end note
+
+@enduml
