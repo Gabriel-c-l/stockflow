@@ -20,6 +20,7 @@ const sku = `SYSTEM-TEST-${Date.now()}-${Math.random().toString(36).slice(2, 10)
 let baseUrl = "";
 let product: ProductResponse;
 let serverProcess: ChildProcess | undefined;
+const concurrentSku = `SYSTEM-CONCURRENT-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 const getAvailablePort = async (): Promise<number> => {
   const server = createServer();
@@ -107,18 +108,22 @@ beforeAll(async () => {
 
 afterAll(async () => {
   try {
-    const createdProduct = await prisma.product.findUnique({
-      where: { sku },
-      select: { id: true },
-    });
+    const skus = [sku, concurrentSku];
 
-    if (createdProduct) {
-      await prisma.stockMovement.deleteMany({
-        where: { productId: createdProduct.id },
+    for (const createdSku of skus) {
+      const createdProduct = await prisma.product.findUnique({
+        where: { sku: createdSku },
+        select: { id: true },
       });
-      await prisma.product.deleteMany({
-        where: { id: createdProduct.id },
-      });
+
+      if (createdProduct) {
+        await prisma.stockMovement.deleteMany({
+          where: { productId: createdProduct.id },
+        });
+        await prisma.product.deleteMany({
+          where: { id: createdProduct.id },
+        });
+      }
     }
   } finally {
     await stopServer();
@@ -258,6 +263,74 @@ describe("StockFlow system tests", () => {
       expect.arrayContaining([
         expect.objectContaining({ type: "ENTRY", quantity: 20 }),
         expect.objectContaining({ type: "EXIT", quantity: 5 }),
+      ]),
+    );
+  });
+
+  it("allows only one of two simultaneous exits", async () => {
+    const created = await fetchJson<ProductResponse>("/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sku: concurrentSku,
+        name: "Concurrent system test product",
+      }),
+    });
+
+    expect(created.response.status).toBe(201);
+    const concurrentProductId = created.body.id;
+
+    const entry = await fetchJson<MovementResponse>("/stock-movements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: concurrentProductId,
+        type: "ENTRY",
+        quantity: 10,
+      }),
+    });
+    expect(entry.response.status).toBe(201);
+
+    const exitRequests = [1, 2].map(() =>
+      fetchJson<MovementResponse>("/stock-movements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: concurrentProductId,
+          type: "EXIT",
+          quantity: 7,
+        }),
+      }),
+    );
+
+    const exitResponses = await Promise.all(exitRequests);
+    const statuses = exitResponses
+      .map(({ response }) => response.status)
+      .sort();
+
+    expect(statuses).toEqual([201, 409]);
+
+    const balance = await fetchJson<ProductResponse>(
+      `/products/${concurrentProductId}`,
+    );
+    expect(balance.response.status).toBe(200);
+    expect(balance.body.quantity).toBe(3);
+
+    const history = await fetchJson<MovementResponse[]>(
+      `/products/${concurrentProductId}/movements`,
+    );
+    expect(history.response.status).toBe(200);
+    expect(history.body).toHaveLength(2);
+    expect(history.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "ENTRY",
+          quantity: 10,
+        }),
+        expect.objectContaining({
+          type: "EXIT",
+          quantity: 7,
+        }),
       ]),
     );
   });
