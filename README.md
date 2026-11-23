@@ -63,8 +63,11 @@ The backend follows a layered structure:
 - **Types:** define and validate request data with Zod.
 - **Prisma:** defines the PostgreSQL schema, migrations and generated client.
 
-The current data model contains `Product` and `StockMovement`. Categories,
-suppliers, employees, reports and other entities are not implemented.
+The current data model contains `Product`, `StockMovement` and `User`, with the
+`ADMIN`, `MANAGER` and `OPERATOR` roles. Authentication is not implemented.
+Historical movements may have no `performedById`; new authorship support is
+prepared for a later authentication stage. Categories, suppliers, employees,
+reports and other entities are not implemented.
 
 ## API endpoints
 
@@ -76,6 +79,14 @@ suppliers, employees, reports and other entities are not implemented.
 | GET | `/products/:id` | Get a product by UUID. |
 | POST | `/stock-movements` | Register an `ENTRY` or `EXIT`. |
 | GET | `/products/:id/movements` | Get a product movement history. |
+| POST | `/auth/login` | Authenticate a user and create an HttpOnly session cookie. |
+| POST | `/auth/logout` | Revoke the current session and clear the cookie. |
+| GET | `/auth/me` | Return the safe profile of the authenticated user. |
+
+Authentication is implemented by a server-side session stored in PostgreSQL.
+The database stores only a SHA-256 hash of the random session token. Passwords
+are stored using Argon2id. Product and stock movement routes are not protected
+by a role matrix in this stage.
 
 The API uses `CORS_ORIGINS` for an explicit comma-separated allowlist. The
 development example is `http://localhost:5173`. Requests without an `Origin`
@@ -194,6 +205,18 @@ The database connection can be checked with:
 ```bash
 npm run db:test
 ```
+
+After the session migration is reviewed and applied, the first administrator
+can be created explicitly with:
+
+```bash
+npm run auth:bootstrap
+```
+
+Configure `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` and
+`BOOTSTRAP_ADMIN_PASSWORD` only in the local environment. The command is
+idempotent and does not create additional administrators after the first one
+exists.
 
 ## Tests and quality
 

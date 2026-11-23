@@ -1,6 +1,8 @@
 import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { app } from "./server";
+import { createTestApp } from "./test-utils";
+
+const app = createTestApp();
 import { prisma } from "./config/database";
 
 const testSkuPrefix = "TEST-PRODUCT-";

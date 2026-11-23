@@ -19,7 +19,7 @@ const validationErrorResponse = (response: Response, error: ZodError) =>
 export const create = async (request: Request, response: Response) => {
   try {
     const input = createStockMovementSchema.parse(request.body);
-    const movement = await createStockMovement(input);
+    const movement = await createStockMovement(input, request.authUser?.id);
 
     return response.status(201).json(movement);
   } catch (error: unknown) {

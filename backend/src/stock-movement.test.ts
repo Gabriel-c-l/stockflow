@@ -1,9 +1,30 @@
 import request from "supertest";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { app } from "./server";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { createTestApp } from "./test-utils";
+
+const app = createTestApp();
 import { prisma } from "./config/database";
 
 const testSkuPrefix = "TEST-MOVEMENT-";
+const testActorId = "00000000-0000-0000-0000-000000000001";
+
+beforeAll(async () => {
+  await prisma.user.upsert({
+    where: { id: testActorId },
+    create: {
+      id: testActorId,
+      name: "Test Administrator",
+      email: "test-admin@example.invalid",
+      passwordHash: "synthetic-test-hash-not-a-real-password",
+      role: "ADMIN",
+      isActive: true,
+    },
+    update: {
+      role: "ADMIN",
+      isActive: true,
+    },
+  });
+});
 
 const createProduct = async (suffix: string) => {
   const response = await request(app)
@@ -43,6 +64,7 @@ afterAll(async () => {
   await prisma.product.deleteMany({
     where: { sku: { startsWith: testSkuPrefix } },
   });
+  await prisma.user.deleteMany({ where: { id: testActorId } });
   await prisma.$disconnect();
 });
 

@@ -3,6 +3,7 @@ import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../config/database";
+import { hashPassword } from "../utils/password";
 
 type ProductResponse = {
   id: string;
@@ -14,12 +15,16 @@ type MovementResponse = {
   productId: string;
   type: "ENTRY" | "EXIT";
   quantity: number;
+  performedById?: string | null;
 };
 
 const sku = `SYSTEM-TEST-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 let baseUrl = "";
 let product: ProductResponse;
 let serverProcess: ChildProcess | undefined;
+let systemAdminId = "";
+let sessionCookie = "";
+const systemAdminEmail = `system-admin-${Date.now()}@example.invalid`;
 const concurrentSku = `SYSTEM-CONCURRENT-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 const getAvailablePort = async (): Promise<number> => {
@@ -47,7 +52,15 @@ const fetchJson = async <T>(
   path: string,
   init?: RequestInit,
 ): Promise<{ response: Response; body: T }> => {
-  const response = await fetch(`${baseUrl}${path}`, init);
+  const method = (init?.method ?? "GET").toUpperCase();
+  const headers = new Headers(init?.headers);
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    headers.set("Origin", baseUrl);
+  }
+  if (sessionCookie) {
+    headers.set("Cookie", sessionCookie);
+  }
+  const response = await fetch(`${baseUrl}${path}`, { ...init, headers });
   const body = (await response.json()) as T;
   return { response, body };
 };
@@ -91,6 +104,19 @@ const stopServer = async (): Promise<void> => {
 };
 
 beforeAll(async () => {
+  const passwordHash = await hashPassword("System-Test-Password-2026!");
+  const systemAdmin = await prisma.user.create({
+    data: {
+      name: "StockFlow System Test Admin",
+      email: systemAdminEmail,
+      passwordHash,
+      role: "ADMIN",
+      isActive: true,
+    },
+    select: { id: true },
+  });
+  systemAdminId = systemAdmin.id;
+
   const port = await getAvailablePort();
   baseUrl = `http://127.0.0.1:${port}`;
   serverProcess = spawn(process.execPath, ["dist/server.js"], {
@@ -99,11 +125,31 @@ beforeAll(async () => {
       ...process.env,
       NODE_ENV: "production",
       PORT: String(port),
+      CORS_ORIGINS: baseUrl,
     },
     stdio: "ignore",
   });
 
   await waitForHealth();
+  const loginResponse = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: baseUrl,
+    },
+    body: JSON.stringify({
+      email: systemAdminEmail,
+      password: "System-Test-Password-2026!",
+    }),
+  });
+  if (!loginResponse.ok) {
+    throw new Error(`System test administrator login failed: ${loginResponse.status}`);
+  }
+  const setCookie = loginResponse.headers.get("set-cookie");
+  if (!setCookie) {
+    throw new Error("System test administrator session cookie was not issued.");
+  }
+  sessionCookie = setCookie.split(";", 1)[0] ?? "";
 });
 
 afterAll(async () => {
@@ -124,6 +170,10 @@ afterAll(async () => {
           where: { id: createdProduct.id },
         });
       }
+    }
+    if (systemAdminId) {
+      await prisma.session.deleteMany({ where: { userId: systemAdminId } });
+      await prisma.user.deleteMany({ where: { id: systemAdminId } });
     }
   } finally {
     await stopServer();
@@ -195,6 +245,7 @@ describe("StockFlow system tests", () => {
       productId: product.id,
       type: "ENTRY",
       quantity: 20,
+      performedById: systemAdminId,
     });
   });
 

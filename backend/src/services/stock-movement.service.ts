@@ -11,7 +11,10 @@ export class StockMovementServiceError extends Error {
   }
 }
 
-export const createStockMovement = (input: CreateStockMovementInput) =>
+export const createStockMovement = (
+  input: CreateStockMovementInput,
+  performedById?: string,
+) =>
   prisma.$transaction(async (transaction) => {
     const product = await stockMovementRepository.findProductById(
       transaction,
@@ -46,7 +49,10 @@ export const createStockMovement = (input: CreateStockMovementInput) =>
       }
     }
 
-    return stockMovementRepository.createStockMovement(transaction, input);
+    return stockMovementRepository.createStockMovement(transaction, {
+      ...input,
+      ...(performedById ? { performedById } : {}),
+    });
   });
 
 export const listProductMovements = async (productId: string) => {

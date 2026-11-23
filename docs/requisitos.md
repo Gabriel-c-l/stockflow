@@ -51,6 +51,38 @@ nem substitui autenticação ou autorização.
 RF01 inclui os dados suportados pelo modelo atual. Categoria e preço não fazem
 parte do cadastro implementado.
 
+### Modelagem de usuários preparada
+
+O banco agora também pode registrar usuários por meio do modelo `User`, com
+papéis `ADMIN`, `MANAGER` e `OPERATOR`. Usuários possuem email único, hash de
+senha, estado ativo e timestamps. Esta etapa não implementa autenticação,
+login, cookies ou JWT.
+
+Quando a autenticação futura for implementada, movimentações novas poderão
+registrar `performedById`. O campo é opcional nesta etapa para preservar
+movimentações criadas anteriormente, que continuarão sem autor identificado.
+Não são criados usuários fictícios nem atribuídas pessoas às movimentações
+históricas.
+
+O bootstrap administrativo será preparado em uma etapa posterior. O mecanismo
+deverá criar o primeiro administrador somente quando não existir nenhum
+administrador ativo ou inativo já cadastrado, utilizando nome, email e
+credencial fornecidos por variáveis de ambiente. A senha deverá ser transformada
+em hash Argon2id antes da persistência. Nenhuma senha padrão será incorporada ao
+código, e o mecanismo não deverá criar administradores adicionais depois da
+configuração inicial.
+
+### Sessões e autenticação preparadas
+
+O backend possui endpoints de login, logout e perfil autenticado por sessão
+persistida. A sessão contém apenas o hash do token aleatório, data de expiração,
+revogação e usuário associado. O cookie é HttpOnly e não é armazenado em
+localStorage.
+
+As rotas de produtos e movimentações não foram protegidas definitivamente por
+funções nesta etapa. A autorização por matrizes de papéis poderá ser aplicada
+posteriormente sem alterar o modelo de sessão.
+
 ## 4. Requisitos não funcionais
 
 | ID | Objetivo | Justificativa | Forma de verificação | Situação |

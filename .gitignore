@@ -160,6 +160,9 @@ vite.config.ts.timestamp-*
 /stockflow
 /backend/stockflow
 
+# Database backups
+/backend/backups/*.dump
+
 # IDE and operating system
 .idea/
 .DS_Store

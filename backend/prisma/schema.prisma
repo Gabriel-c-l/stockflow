@@ -17,6 +17,38 @@ enum StockMovementType {
   EXIT
 }
 
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+}
+
+model User {
+  id           String          @id @default(uuid()) @db.Uuid
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         UserRole        @default(OPERATOR)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  movements    StockMovement[]
+  sessions     Session[]
+}
+
+model Session {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model Product {
   id             String          @id @default(uuid()) @db.Uuid
   sku            String          @unique
@@ -31,13 +63,16 @@ model Product {
 }
 
 model StockMovement {
-  id        String            @id @default(uuid()) @db.Uuid
-  productId String            @db.Uuid
-  product   Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
-  type      StockMovementType
-  quantity  Int
-  notes     String?
-  createdAt DateTime          @default(now())
+  id            String            @id @default(uuid()) @db.Uuid
+  productId     String            @db.Uuid
+  product       Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  performedById String?           @db.Uuid
+  performedBy   User?             @relation(fields: [performedById], references: [id], onDelete: Restrict)
+  type          StockMovementType
+  quantity      Int
+  notes         String?
+  createdAt     DateTime          @default(now())
 
   @@index([productId, createdAt])
+  @@index([performedById])
 }

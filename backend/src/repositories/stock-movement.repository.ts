@@ -3,6 +3,9 @@ import { prisma } from "../config/database";
 import type { CreateStockMovementInput } from "../types/stock-movement";
 
 type DatabaseClient = Prisma.TransactionClient;
+type CreateStockMovementWithActor = CreateStockMovementInput & {
+  performedById?: string;
+};
 
 export const findProductById = (client: DatabaseClient, productId: string) =>
   client.product.findUnique({
@@ -35,7 +38,7 @@ export const decreaseProductQuantity = (
 
 export const createStockMovement = (
   client: DatabaseClient,
-  data: CreateStockMovementInput,
+  data: CreateStockMovementWithActor,
 ) =>
   client.stockMovement.create({
     data: {
@@ -43,6 +46,7 @@ export const createStockMovement = (
       type: data.type,
       quantity: data.quantity,
       notes: data.notes ?? null,
+      performedById: data.performedById ?? null,
     },
   });
 

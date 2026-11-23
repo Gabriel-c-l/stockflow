@@ -54,3 +54,21 @@ describe("server security headers and CORS", () => {
     expect(response.headers["x-powered-by"]).toBeUndefined();
   });
 });
+
+
+describe("protected stock routes", () => {
+  const securedApp = createApp(["http://localhost:5173"]);
+
+  it("requires an authenticated session to access products", async () => {
+    const response = await request(securedApp).get("/products");
+    expect(response.status).toBe(401);
+  });
+
+  it("requires an authenticated session to create stock movements", async () => {
+    const response = await request(securedApp)
+      .post("/stock-movements")
+      .set("Origin", "http://localhost:5173")
+      .send({ productId: "00000000-0000-0000-0000-000000000000", type: "ENTRY", quantity: 1 });
+    expect(response.status).toBe(401);
+  });
+});

@@ -39,6 +39,7 @@ const movementInput = {
 const movement = {
   id: "00000000-0000-0000-0000-000000000002",
   ...movementInput,
+  performedById: null,
   notes: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -69,6 +70,28 @@ describe("StockMovementService unit tests", () => {
     ).toHaveBeenCalledWith(transactionClient, movementInput);
   });
 
+  it("records the authenticated user responsible for a movement", async () => {
+    mockedStockMovementRepository.findProductById.mockResolvedValue({
+      id: productId,
+    });
+    mockedStockMovementRepository.createStockMovement.mockResolvedValue({
+      ...movement,
+      performedById: "00000000-0000-0000-0000-000000000099",
+    });
+
+    await createStockMovement(
+      movementInput,
+      "00000000-0000-0000-0000-000000000099",
+    );
+
+    expect(
+      mockedStockMovementRepository.createStockMovement,
+    ).toHaveBeenCalledWith(transactionClient, {
+      ...movementInput,
+      performedById: "00000000-0000-0000-0000-000000000099",
+    });
+  });
+
   it("registers an EXIT when stock is sufficient", async () => {
     const input = { ...movementInput, type: "EXIT" as const };
     mockedStockMovementRepository.findProductById.mockResolvedValue({
@@ -80,6 +103,7 @@ describe("StockMovementService unit tests", () => {
     mockedStockMovementRepository.createStockMovement.mockResolvedValue({
       ...movement,
       ...input,
+      performedById: null,
     });
 
     await expect(createStockMovement(input)).resolves.toMatchObject(input);

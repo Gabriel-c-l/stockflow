@@ -65,8 +65,11 @@ O backend segue uma estrutura em camadas:
 - **Types:** definem e validam dados de entrada com Zod.
 - **Prisma:** define o schema PostgreSQL, as migrations e o client gerado.
 
-O modelo de dados atual contém `Product` e `StockMovement`. Categorias,
-fornecedores, funcionários, relatórios e outras entidades não estão
+O modelo de dados atual contém `Product`, `StockMovement` e `User`, com os
+papéis `ADMIN`, `MANAGER` e `OPERATOR`. A autenticação ainda não está
+implementada. Movimentações históricas podem não possuir `performedById`; o
+suporte à identificação do autor foi preparado para uma etapa posterior.
+Categorias, fornecedores, funcionários, relatórios e outras entidades não estão
 implementados.
 
 ## Endpoints da API
@@ -79,6 +82,14 @@ implementados.
 | GET | `/products/:id` | Consultar um produto por UUID. |
 | POST | `/stock-movements` | Registrar uma `ENTRY` ou `EXIT`. |
 | GET | `/products/:id/movements` | Consultar o histórico de movimentações. |
+| POST | `/auth/login` | Autenticar um usuário e criar um cookie HttpOnly de sessão. |
+| POST | `/auth/logout` | Revogar a sessão atual e limpar o cookie. |
+| GET | `/auth/me` | Retornar o perfil seguro do usuário autenticado. |
+
+A autenticação utiliza sessões persistidas no PostgreSQL. O banco armazena
+somente o hash SHA-256 do token aleatório da sessão. As senhas são armazenadas
+com Argon2id. As rotas de produtos e movimentações ainda não possuem uma matriz
+completa de permissões nesta etapa.
 
 A API utiliza `CORS_ORIGINS` para uma lista explícita de origens separadas por
 vírgula. O exemplo de desenvolvimento é `http://localhost:5173`. Requisições
@@ -198,6 +209,17 @@ A conexão com o banco pode ser verificada com:
 ```bash
 npm run db:test
 ```
+
+Depois que a migration de sessões for revisada e aplicada, o primeiro
+administrador pode ser criado explicitamente com:
+
+```bash
+npm run auth:bootstrap
+```
+
+Configure `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` e
+`BOOTSTRAP_ADMIN_PASSWORD` somente no ambiente local. O comando é idempotente
+e não cria novos administradores depois que o primeiro já existir.
 
 ## Testes e qualidade
 

@@ -9,7 +9,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov", "html"],
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/generated/prisma/**"],
+      exclude: ["src/**/*.test.ts", "src/generated/prisma/**", "src/test-utils.ts"],
       thresholds: {
         statements: 75,
         branches: 75,
