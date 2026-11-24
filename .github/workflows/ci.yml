@@ -79,3 +79,5 @@ jobs:
             -Dsonar.projectBaseDir=backend
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.exclusions=src/generated/prisma/**,src/**/*.test.ts,prisma/migrations/**
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
