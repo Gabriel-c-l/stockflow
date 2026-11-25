@@ -97,9 +97,65 @@ describe("Products", () => {
     const response = await request(app).get("/products");
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(
+    expect(response.body.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ sku: `${testSkuPrefix}LIST` }),
+      ]),
+    );
+    expect(response.body.pagination).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      total: expect.any(Number),
+      totalPages: expect.any(Number),
+    });
+  });
+
+  it("updates product details without changing stock quantity", async () => {
+    const created = await request(app)
+      .post("/products")
+      .send(productPayload(`${testSkuPrefix}UPDATE`));
+
+    const response = await request(app)
+      .patch(`/products/${created.body.id}`)
+      .send({ name: "Updated product", minStock: 12 });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: created.body.id,
+      name: "Updated product",
+      minStock: 12,
+      quantity: 0,
+    });
+  });
+
+  it("rejects changing stock quantity through product update", async () => {
+    const created = await request(app)
+      .post("/products")
+      .send(productPayload(`${testSkuPrefix}UPDATE-QUANTITY`));
+
+    const response = await request(app)
+      .patch(`/products/${created.body.id}`)
+      .send({ quantity: 10 });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("deactivates a product without deleting it", async () => {
+    const created = await request(app)
+      .post("/products")
+      .send(productPayload(`${testSkuPrefix}DEACTIVATE`));
+
+    const response = await request(app).delete(`/products/${created.body.id}`);
+    const detail = await request(app).get(`/products/${created.body.id}`);
+    const inactiveList = await request(app).get("/products?status=inactive");
+
+    expect(response.status).toBe(200);
+    expect(response.body.isActive).toBe(false);
+    expect(detail.status).toBe(200);
+    expect(detail.body.isActive).toBe(false);
+    expect(inactiveList.body.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: created.body.id, isActive: false }),
       ]),
     );
   });

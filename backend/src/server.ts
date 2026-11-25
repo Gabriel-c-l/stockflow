@@ -4,6 +4,7 @@ import express, { type RequestHandler } from "express";
 import { productRouter } from "./routes/product.routes";
 import { stockMovementRouter } from "./routes/stock-movement.routes";
 import { authRouter } from "./routes/auth.routes";
+import { categoryRouter } from "./routes/category.routes";
 import { createCsrfProtection } from "./middlewares/csrf";
 import { authenticate } from "./middlewares/authenticate";
 
@@ -41,6 +42,7 @@ export const createApp = (
   app.use(express.json({ limit: "32kb" }));
   app.use(csrfMiddleware ?? createCsrfProtection(allowedOrigins));
   app.use("/auth", authRouter);
+  app.use("/categories", authenticationMiddleware, categoryRouter);
   app.use("/products", authenticationMiddleware, productRouter);
   app.use("/stock-movements", authenticationMiddleware, stockMovementRouter);
 

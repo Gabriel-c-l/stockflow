@@ -11,6 +11,11 @@ type ProductResponse = {
   quantity: number;
 };
 
+type ProductListResponse = {
+  items: ProductResponse[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+};
+
 type MovementResponse = {
   productId: string;
   type: "ENTRY" | "EXIT";
@@ -220,10 +225,11 @@ describe("StockFlow system tests", () => {
   });
 
   it("lists the created product", async () => {
-    const { response, body } = await fetchJson<ProductResponse[]>("/products");
+    const { response, body } = await fetchJson<ProductListResponse>("/products");
 
     expect(response.status).toBe(200);
-    expect(body.some((item) => item.id === product.id)).toBe(true);
+    expect(body.items.some((item) => item.id === product.id)).toBe(true);
+    expect(body.pagination.page).toBe(1);
   });
 
   it("registers an ENTRY of 20 units", async () => {
