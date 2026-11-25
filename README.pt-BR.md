@@ -303,3 +303,11 @@ plano de testes conforme o escopo evoluir.
 - **Unidade curricular:** Garantia e Qualidade de Software
 - **Projeto:** A3 — Sistema de Gestão de Estoque
 - **Autor:** Gabriel Corrêa Lopes
+
+## Cadastro de produtos (evolução)
+
+O cadastro agora prevê categoria opcional, unidade de medida e localização física. As unidades aceitas pela API são `UN`, `CX`, `PCT`, `KG`, `G`, `L`, `ML`, `M` e `CM`. Produtos já existentes recebem `UN` como unidade padrão após a migração.
+
+Categorias possuem nome único, descrição e desativação lógica. Uma categoria não pode ser desativada enquanto houver produtos ativos vinculados a ela. A quantidade em estoque continua sendo alterada somente por movimentações de entrada e saída.
+
+Consulte `NEXT-STEP-CATEGORIES.md` para os endpoints e os passos de migração.
