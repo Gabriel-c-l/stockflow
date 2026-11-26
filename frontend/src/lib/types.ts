@@ -14,6 +14,7 @@ export interface Product {
   sku: string;
   name: string;
   description: string | null;
+  price: number | string;
   categoryId: string | null;
   category: Category | null;
   unit: ProductUnit;
@@ -26,6 +27,22 @@ export interface Product {
 }
 
 export type ProductUnit = 'UN' | 'CX' | 'PCT' | 'KG' | 'G' | 'L' | 'ML' | 'M' | 'CM';
+
+export interface Supplier {
+  id: string;
+  name: string;
+  taxId: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSupplierInput { name: string; taxId?: string; email?: string; phone?: string; address?: string; notes?: string; }
+export interface UpdateSupplierInput { name?: string; taxId?: string | null; email?: string | null; phone?: string | null; address?: string | null; notes?: string | null; }
 
 export interface Category {
   id: string;
@@ -48,6 +65,10 @@ export interface StockMovement {
   type: StockMovementType;
   quantity: number;
   notes: string | null;
+  supplierId?: string | null;
+  supplier?: Pick<Supplier, 'id' | 'name' | 'taxId'> | null;
+  recipient?: string | null;
+  unitCost?: number | string | null;
   createdAt: string;
 }
 
@@ -55,6 +76,7 @@ export interface CreateProductInput {
   sku: string;
   name: string;
   description?: string | null;
+  price?: number;
   minStock?: number;
   categoryId?: string | null;
   unit?: ProductUnit;
@@ -65,6 +87,9 @@ export interface CreateStockMovementInput {
   productId: string;
   type: StockMovementType;
   quantity: number;
+  supplierId?: string | null;
+  recipient?: string | null;
+  unitCost?: number;
   notes?: string;
 }
 
@@ -90,6 +115,7 @@ export interface UpdateProductInput {
   sku?: string;
   name?: string;
   description?: string | null;
+  price?: number;
   minStock?: number;
   categoryId?: string | null;
   unit?: ProductUnit;

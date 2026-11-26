@@ -1,0 +1,141 @@
+/* StockFlow — visual polish for the stock movements page */
+.stock-movements-page { gap: 22px; }
+.stock-movement-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1045px; }
+.stock-movements-card { min-width: 0; padding: 18px 20px 0; }
+.stock-movement-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(145px, .55fr) minmax(190px, .9fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 17px;
+}
+.stock-filter-search {
+  display: flex;
+  min-width: 0;
+  height: 37px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 11px;
+  border: 1px solid #e5e9ef;
+  border-radius: 7px;
+  color: #98a2b1;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.stock-filter-search:focus-within {
+  border-color: #8eaddd;
+  box-shadow: 0 0 0 3px #3977df12;
+}
+.stock-filter-search input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: #344054;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+}
+.stock-filter-search input::placeholder { color: #a2aab6; }
+.stock-movement-toolbar > select {
+  width: 100%;
+  min-width: 0;
+  height: 37px;
+  padding: 0 30px 0 10px;
+  border: 1px solid #e5e9ef;
+  border-radius: 7px;
+  outline: 0;
+  color: #596678;
+  background-color: #fff;
+  font: inherit;
+  font-size: 10px;
+}
+.stock-movement-toolbar > select:focus {
+  border-color: #8eaddd;
+  box-shadow: 0 0 0 3px #3977df12;
+}
+.stock-movement-toolbar > .button { white-space: nowrap; }
+.stock-empty-state {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 30px 16px;
+  color: #8b96a5;
+  text-align: center;
+  font-size: 10px;
+}
+.stock-empty-state > svg {
+  width: 45px;
+  height: 45px;
+  margin-bottom: 3px;
+  padding: 10px;
+  border-radius: 12px;
+  color: #4775bd;
+  background: #edf3fc;
+}
+.stock-empty-state strong {
+  color: #3a4657;
+  font-size: 12px;
+  font-weight: 650;
+}
+.stock-empty-state span { max-width: 370px; line-height: 1.6; }
+.stock-results-footer {
+  display: flex;
+  min-height: 49px;
+  align-items: center;
+  border-top: 1px solid #edf0f4;
+  color: #9aa3b0;
+  font-size: 9px;
+}
+.stock-movement-table { margin-top: 0; }
+.stock-movement-type { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 650; }
+.stock-type-entry { color: #26966d; }
+.stock-type-exit { color: #d17b54; }
+.stock-notes-cell { max-width: 210px; overflow: hidden; text-overflow: ellipsis; }
+.stock-stat-entry { color: #26966d; }
+.stock-stat-exit { color: #d17b54; }
+.stock-movement-modal { width: min(100%, 650px); }
+.stock-movement-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 14px; }
+.stock-movement-form .category-form-field { min-width: 0; }
+.stock-movement-form .category-form-field:last-child { grid-column: 1 / -1; }
+.stock-movement-form .category-form-field select,
+.stock-movement-form .category-form-field input,
+.stock-movement-form .category-form-field textarea {
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 11px;
+  border: 1px solid #e4e8ee;
+  border-radius: 7px;
+  outline: 0;
+  color: #344054;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+}
+.stock-movement-form .category-form-field select:focus,
+.stock-movement-form .category-form-field input:focus,
+.stock-movement-form .category-form-field textarea:focus {
+  border-color: #8eaddd;
+  box-shadow: 0 0 0 3px #3977df12;
+}
+.stock-movement-form .category-form-field textarea { resize: vertical; }
+.stock-movement-form small { color: #9aa3b0; font-size: 9px; font-weight: 400; }
+@media (max-width: 900px) {
+  .stock-movement-toolbar { grid-template-columns: minmax(0, 1fr) minmax(130px, .7fr); }
+  .stock-filter-search { grid-column: 1 / -1; }
+  .stock-movement-toolbar > .button { justify-self: start; }
+}
+@media (max-width: 620px) {
+  .stock-movements-card { padding: 13px 13px 0; }
+  .stock-movement-stats { grid-template-columns: 1fr; }
+  .stock-movement-toolbar { grid-template-columns: 1fr; }
+  .stock-filter-search { grid-column: auto; }
+  .stock-movement-toolbar > .button { width: 100%; }
+  .stock-movement-form { grid-template-columns: 1fr; }
+  .stock-movement-form .category-form-field:last-child { grid-column: auto; }
+}

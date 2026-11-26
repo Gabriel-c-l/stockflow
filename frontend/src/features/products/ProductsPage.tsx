@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { ApiError } from '../../lib/api';
 import { stockflowApi } from '../../lib/stockflow-api';
 import type { Category, Product, ProductListResponse, ProductUnit } from '../../lib/types';
+import { blockNonNumericKey, decimalOnly, digitsOnly } from '../../lib/numeric-input';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 const PAGE_SIZE = 10;
@@ -24,6 +25,8 @@ const unitLabel = (unit: ProductUnit) => units.find((item) => item.value === uni
 export function ProductsPage() {
   const [result, setResult] = useState<ProductListResponse>({ items: [], pagination: { page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 0 } });
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryLoadError, setCategoryLoadError] = useState('');
+  const [movementLoadError, setMovementLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('active');
   const [categoryId, setCategoryId] = useState('');
@@ -35,6 +38,7 @@ export function ProductsPage() {
   const [sku, setSku] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('0');
   const [formCategoryId, setFormCategoryId] = useState('');
   const [unit, setUnit] = useState<ProductUnit>('UN');
   const [location, setLocation] = useState('');
@@ -58,7 +62,9 @@ export function ProductsPage() {
 
   useEffect(() => { void loadProducts(); }, [loadProducts]);
   useEffect(() => {
-    stockflowApi.listCategories('active').then(setCategories).catch(() => setCategories([]));
+    stockflowApi.listCategories('active')
+      .then((data) => { setCategories(data); setCategoryLoadError(''); })
+      .catch((err) => setCategoryLoadError(errorMessage(err)));
   }, []);
 
   const stats = useMemo(() => ({
@@ -67,12 +73,12 @@ export function ProductsPage() {
   }), [result.items]);
 
   const resetForm = () => {
-    setEditing(null); setSku(''); setName(''); setDescription(''); setFormCategoryId('');
+    setEditing(null); setSku(''); setName(''); setDescription(''); setPrice('0'); setFormCategoryId('');
     setUnit('UN'); setLocation(''); setMinStock('0'); setInitialQuantity('0'); setFormError('');
   };
   const openCreate = () => { resetForm(); setModalOpen(true); };
   const openEdit = (product: Product) => {
-    setEditing(product); setSku(product.sku); setName(product.name); setDescription(product.description ?? '');
+    setEditing(product); setSku(product.sku); setName(product.name); setDescription(product.description ?? ''); setPrice(String(product.price ?? 0));
     setFormCategoryId(product.categoryId ?? ''); setUnit(product.unit); setLocation(product.location ?? '');
     setMinStock(String(product.minStock)); setInitialQuantity('0'); setFormError(''); setModalOpen(true);
   };
@@ -83,12 +89,14 @@ export function ProductsPage() {
     const parsedMin = Number(minStock);
     const parsedInitial = Number(initialQuantity);
     if (!sku.trim() || !name.trim()) { setFormError('SKU e nome são obrigatórios.'); return; }
+    const parsedPrice = Number(price.replace(',', '.'));
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) { setFormError('Informe um preço válido igual ou maior que zero.'); return; }
     if (!Number.isInteger(parsedMin) || parsedMin < 0 || !Number.isInteger(parsedInitial) || parsedInitial < 0) {
       setFormError('Estoque mínimo e quantidade inicial devem ser números inteiros iguais ou maiores que zero.'); return;
     }
     setSaving(true);
     try {
-      const input = { sku: sku.trim(), name: name.trim(), description: description.trim() || null, categoryId: formCategoryId || null, unit, location: location.trim() || null, minStock: parsedMin };
+      const input = { sku: sku.trim(), name: name.trim(), description: description.trim() || null, price: parsedPrice, categoryId: formCategoryId || null, unit, location: location.trim() || null, minStock: parsedMin };
       let saved: Product;
       if (editing) {
         saved = await stockflowApi.updateProduct(editing.id, input);
@@ -112,9 +120,9 @@ export function ProductsPage() {
   };
 
   const openDetails = async (product: Product) => {
-    setSelected(product); setMovements([]); setMovementLoading(true);
+    setSelected(product); setMovements([]); setMovementLoadError(''); setMovementLoading(true);
     try { setMovements(await stockflowApi.listProductMovements(product.id)); }
-    catch { setMovements([]); }
+    catch (err) { setMovementLoadError(errorMessage(err)); }
     finally { setMovementLoading(false); }
   };
 
@@ -151,12 +159,13 @@ export function ProductsPage() {
           : error ? <div className="category-state category-state-error"><Icon name="alert" size={24} /><strong>Não foi possível carregar os produtos</strong><span>{error}</span><Button variant="secondary" onClick={() => void loadProducts()}>Tentar novamente</Button></div>
           : result.items.length === 0 ? <div className="category-state"><div className="category-empty-icon"><Icon name="package" size={23} /></div><strong>{search || categoryId ? 'Nenhum produto encontrado' : 'Seu catálogo ainda está vazio'}</strong><span>{search || categoryId ? 'Ajuste os filtros ou tente outra busca.' : 'Cadastre seu primeiro produto para começar a controlar o estoque.'}</span>{status !== 'inactive' && <Button leadingIcon={<Icon name="plus" size={15} />} onClick={openCreate}>Cadastrar produto</Button>}</div>
           : <div className="table-wrap products-table-wrap"><table className="data-table products-table">
-            <thead><tr><th>PRODUTO</th><th>CATEGORIA</th><th>ESTOQUE</th><th>LOCALIZAÇÃO</th><th>STATUS</th><th><span className="sr-only">Ações</span></th></tr></thead>
+            <thead><tr><th>PRODUTO</th><th>CATEGORIA</th><th>PREÇO UNITÁRIO</th><th>ESTOQUE</th><th>LOCALIZAÇÃO</th><th>STATUS</th><th><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>{result.items.map((product) => {
               const low = product.quantity <= product.minStock;
               return <tr key={product.id}>
                 <td><button className="products-product-button" onClick={() => void openDetails(product)}><span className="category-avatar"><Icon name="package" size={16} /></span><span><strong>{product.name}</strong><small>{product.sku}</small></span></button></td>
                 <td>{product.category?.name ?? '—'}</td>
+                <td className="products-price-cell">{Number(product.price ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 <td><span className="products-quantity">{product.quantity} {unitLabel(product.unit)}</span>{low && <small className="products-low-label">Estoque baixo</small>}</td>
                 <td>{product.location || '—'}</td>
                 <td><Badge tone={!product.isActive ? 'neutral' : low ? 'warning' : 'success'}>{!product.isActive ? 'Inativo' : low ? 'Estoque baixo' : 'Disponível'}</Badge></td>
@@ -174,14 +183,16 @@ export function ProductsPage() {
         <section className="category-modal products-modal" role="dialog" aria-modal="true" aria-labelledby="product-form-title">
           <div className="category-modal-header"><div><span className="page-eyebrow">CATÁLOGO DE ESTOQUE</span><h2 id="product-form-title">{editing ? 'Editar produto' : 'Novo produto'}</h2><p>Preencha os dados para manter seu catálogo organizado.</p></div><button className="icon-button" type="button" onClick={closeModal} aria-label="Fechar">×</button></div>
           <form onSubmit={(e) => void submitProduct(e)}>
+            {categoryLoadError && <div className="category-alert category-alert-warning" role="status">Não foi possível carregar as categorias. Você ainda pode salvar o produto sem categoria. {categoryLoadError}</div>}
             <div className="products-form-grid">
               <label className="category-form-field">SKU <span>*</span><input value={sku} onChange={(e) => setSku(e.target.value)} placeholder="Ex.: ELE-001" maxLength={60} required /></label>
               <label className="category-form-field">Nome do produto <span>*</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Teclado sem fio" maxLength={120} required /></label>
+              <label className="category-form-field">Preço unitário (R$)<input type="text" inputMode="decimal" value={price} onKeyDown={(e) => blockNonNumericKey(e, true)} onChange={(e) => setPrice(decimalOnly(e.target.value))} placeholder="0,00"/><small>Preço atual de referência; não altera o custo histórico das entradas.</small></label>
               <label className="category-form-field">Categoria<select value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}><option value="">Sem categoria</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
               <label className="category-form-field">Unidade<select value={unit} onChange={(e) => setUnit(e.target.value as ProductUnit)}>{units.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
               <label className="category-form-field">Localização<input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ex.: Prateleira A-03" maxLength={120} /></label>
-              <label className="category-form-field">Estoque mínimo<input type="number" min="0" step="1" value={minStock} onChange={(e) => setMinStock(e.target.value)} /></label>
-              {!editing && <label className="category-form-field">Quantidade inicial<input type="number" min="0" step="1" value={initialQuantity} onChange={(e) => setInitialQuantity(e.target.value)} /><small>Será registrada como uma entrada de estoque.</small></label>}
+              <label className="category-form-field">Estoque mínimo<input type="text" inputMode="numeric" value={minStock} onKeyDown={(e) => blockNonNumericKey(e)} onChange={(e) => setMinStock(digitsOnly(e.target.value, 9))} /></label>
+              {!editing && <label className="category-form-field">Quantidade inicial<input type="text" inputMode="numeric" value={initialQuantity} onKeyDown={(e) => blockNonNumericKey(e)} onChange={(e) => setInitialQuantity(digitsOnly(e.target.value, 9))} /><small>Será registrada como uma entrada de estoque.</small></label>}
               <label className="category-form-field products-description-field">Descrição<textarea rows={3} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Informações adicionais sobre o produto." /></label>
             </div>
             {formError && <div className="category-alert category-alert-error" role="alert">{formError}</div>}
@@ -193,9 +204,10 @@ export function ProductsPage() {
       {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelected(null); }}>
         <section className="category-modal products-detail-modal" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
           <div className="category-modal-header"><div><span className="page-eyebrow">DETALHES DO PRODUTO</span><h2 id="product-detail-title">{selected.name}</h2><p>{selected.sku} · {selected.category?.name ?? 'Sem categoria'}</p></div><button className="icon-button" type="button" onClick={() => setSelected(null)} aria-label="Fechar">×</button></div>
-          <div className="products-detail-grid"><div><span>Estoque atual</span><strong>{selected.quantity} {selected.unit}</strong></div><div><span>Estoque mínimo</span><strong>{selected.minStock} {selected.unit}</strong></div><div><span>Localização</span><strong>{selected.location || 'Não informada'}</strong></div><div><span>Status</span><strong>{selected.isActive ? 'Ativo' : 'Inativo'}</strong></div></div>
+          <div className="products-detail-grid"><div><span>Preço unitário</span><strong>{Number(selected.price ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></div><div><span>Estoque atual</span><strong>{selected.quantity} {selected.unit}</strong></div><div><span>Estoque mínimo</span><strong>{selected.minStock} {selected.unit}</strong></div><div><span>Localização</span><strong>{selected.location || 'Não informada'}</strong></div><div><span>Status</span><strong>{selected.isActive ? 'Ativo' : 'Inativo'}</strong></div></div>
           <div className="products-history-heading"><strong>Histórico de movimentações</strong><span>Mais recentes primeiro</span></div>
-          {movementLoading ? <div className="category-state"><span className="loading-spinner" />Carregando histórico...</div> : movements.length === 0 ? <div className="products-no-history">Nenhuma movimentação registrada para este produto.</div> : <div className="products-history-list">{movements.slice(0, 8).map((movement) => <div key={movement.id}><span className={movement.type === 'ENTRY' ? 'history-entry' : 'history-exit'}>{movement.type === 'ENTRY' ? 'Entrada' : 'Saída'}</span><strong>{movement.type === 'ENTRY' ? '+' : '−'}{movement.quantity} {selected.unit}</strong><small>{dateLabel(movement.createdAt)}{movement.notes ? ` · ${movement.notes}` : ''}</small></div>)}</div>}
+          {movementLoadError && <div className="category-alert category-alert-error" role="alert">Não foi possível carregar o histórico: {movementLoadError}</div>}
+          {movementLoading ? <div className="category-state"><span className="loading-spinner" />Carregando histórico...</div> : movementLoadError ? null : movements.length === 0 ? <div className="products-no-history">Nenhuma movimentação registrada para este produto.</div> : <div className="products-history-list">{movements.slice(0, 8).map((movement) => <div key={movement.id}><span className={movement.type === 'ENTRY' ? 'history-entry' : 'history-exit'}>{movement.type === 'ENTRY' ? 'Entrada' : 'Saída'}</span><strong>{movement.type === 'ENTRY' ? '+' : '−'}{movement.quantity} {selected.unit}</strong><small>{dateLabel(movement.createdAt)}{movement.notes ? ` · ${movement.notes}` : ''}</small></div>)}</div>}
           <div className="category-modal-actions"><Button variant="secondary" onClick={() => setSelected(null)}>Fechar</Button><Button onClick={() => { setSelected(null); openEdit(selected); }}>Editar produto</Button></div>
         </section>
       </div>}

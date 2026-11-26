@@ -19,6 +19,7 @@
 }
 
 * { box-sizing: border-box; }
+html { scrollbar-gutter: stable; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, input { font: inherit; }
 button { cursor: pointer; }
@@ -391,3 +392,35 @@ a { color: inherit; text-decoration: none; }
 .dashboard-category-legend { max-height: 180px; overflow: auto; }
 .dashboard-live .category-content { gap: 16px; }
 @media (max-width: 760px) { .dashboard-live .dashboard-bars { gap: 5px; padding-right: 0; padding-left: 0; }.dashboard-live .category-content { flex-wrap: wrap; justify-content: center; }.dashboard-category-legend { width: 100%; } }
+
+/* Supplier management and inventory financial fields */
+.supplier-management-card { padding-bottom: 0; }
+.supplier-table td { vertical-align: middle; }
+.supplier-name, .supplier-contact { display: flex; min-width: 150px; flex-direction: column; gap: 4px; }
+.supplier-name strong, .supplier-contact strong { color: #3b4656; font-size: 10px; font-weight: 650; }
+.supplier-name small, .supplier-contact small { color: #9aa3b0; font-size: 8px; }
+.supplier-avatar { color: #3977b8; background: #edf4fb; }
+.supplier-modal { width: min(100%, 650px); }
+.supplier-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 14px; }
+.supplier-form-grid .category-form-field { min-width: 0; }
+.supplier-form-grid input, .supplier-form-grid textarea { width: 100%; min-height: 38px; padding: 9px 11px; border: 1px solid #e4e8ee; border-radius: 7px; outline: 0; color: #344054; background: #fff; font: inherit; font-size: 10px; }
+.supplier-form-grid textarea { resize: vertical; }
+.supplier-form-grid input:focus, .supplier-form-grid textarea:focus { border-color: #8eaddd; box-shadow: 0 0 0 3px #3977df12; }
+.supplier-field-wide { grid-column: 1 / -1; }
+.products-price-cell { color: #354256 !important; font-weight: 650; }
+.stock-movement-form select, .stock-movement-form input, .stock-movement-form textarea { width: 100%; min-height: 38px; padding: 9px 11px; border: 1px solid #e4e8ee; border-radius: 7px; outline: 0; color: #344054; background: #fff; font: inherit; font-size: 10px; }
+.stock-movement-form select:focus, .stock-movement-form input:focus, .stock-movement-form textarea:focus { border-color: #8eaddd; box-shadow: 0 0 0 3px #3977df12; }
+.stock-movement-form small { color: #9aa3b0; font-size: 9px; font-weight: 400; }
+@media (max-width: 620px) { .supplier-form-grid { grid-template-columns: 1fr; }.supplier-field-wide { grid-column: auto; } }
+
+/* Validation feedback: keep server-side field details readable in every form. */
+.category-alert-error,
+.auth-error {
+  white-space: pre-line;
+  line-height: 1.65;
+}
+
+.category-alert { font-size: 12px; }
+.category-alert-warning { color: #805b18; border-color: #f0dfb5; background: #fff9e9; }
+.category-alert-error { white-space: pre-line; line-height: 1.65; }
+.auth-error { white-space: pre-line; line-height: 1.65; }

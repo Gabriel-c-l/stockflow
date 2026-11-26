@@ -11,7 +11,8 @@
     "db:test": "tsx src/scripts/test-database.ts",
     "auth:bootstrap": "tsx src/scripts/bootstrap-admin.ts",
     "test": "vitest run --coverage",
-    "test:system": "vitest run --config vitest.system.config.mts --coverage=false"
+    "test:system": "vitest run --config vitest.system.config.mts --coverage=false",
+    "db:seed:demo": "tsx src/scripts/seed-demo.ts"
   },
   "keywords": [],
   "author": "",

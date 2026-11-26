@@ -4,11 +4,13 @@ import { Card } from '../../components/ui/Card';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Icon } from '../../components/ui/Icon';
 import { stockflowApi } from '../../lib/stockflow-api';
-import type { Product, StockMovement, StockMovementType } from '../../lib/types';
+import type { Product, StockMovement, StockMovementType, Supplier } from '../../lib/types';
+import { blockNonNumericKey, decimalOnly, digitsOnly } from '../../lib/numeric-input';
 
 type MovementRow = StockMovement & {
   product: Pick<Product, 'id' | 'sku' | 'name' | 'unit'>;
   performedBy: { id: string; name: string; email: string } | null;
+  supplier: Pick<Supplier, 'id' | 'name' | 'taxId'> | null;
 };
 
 const unitLabels: Record<string, string> = { UN: 'un', CX: 'cx', PCT: 'pct', KG: 'kg', G: 'g', L: 'L', ML: 'ml', M: 'm', CM: 'cm' };
@@ -17,6 +19,7 @@ const dateLabel = (value: string) => new Intl.DateTimeFormat('pt-BR', { dateStyl
 export function StockMovementsPage() {
   const [movements, setMovements] = useState<MovementRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -26,6 +29,9 @@ export function StockMovementsPage() {
   const [productId, setProductId] = useState('');
   const [type, setType] = useState<StockMovementType>('ENTRY');
   const [quantity, setQuantity] = useState('1');
+  const [supplierId, setSupplierId] = useState('');
+  const [unitCost, setUnitCost] = useState('');
+  const [recipient, setRecipient] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -33,12 +39,14 @@ export function StockMovementsPage() {
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const [movementData, productData] = await Promise.all([
+      const [movementData, productData, supplierData] = await Promise.all([
         stockflowApi.listStockMovements(),
         stockflowApi.listProducts({ status: 'active', pageSize: 100 }),
+        stockflowApi.listSuppliers('active'),
       ]);
       setMovements(movementData as MovementRow[]);
       setProducts(productData.items);
+      setSuppliers(supplierData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível carregar as movimentações.');
     } finally { setLoading(false); }
@@ -53,7 +61,7 @@ export function StockMovementsPage() {
   }), [movements, search, typeFilter, productFilter]);
 
   const openModal = () => {
-    setProductId(products[0]?.id ?? ''); setType('ENTRY'); setQuantity('1'); setNotes(''); setFormError(''); setModalOpen(true);
+    setProductId(products[0]?.id ?? ''); setType('ENTRY'); setQuantity('1'); setSupplierId(''); setUnitCost(''); setRecipient(''); setNotes(''); setFormError(''); setModalOpen(true);
   };
 
   const submit = async (event: FormEvent) => {
@@ -63,9 +71,12 @@ export function StockMovementsPage() {
     if (!Number.isSafeInteger(amount) || amount <= 0) { setFormError('Informe uma quantidade inteira maior que zero.'); return; }
     const selected = products.find((item) => item.id === productId);
     if (type === 'EXIT' && selected && amount > selected.quantity) { setFormError(`Estoque insuficiente. Disponível: ${selected.quantity} ${unitLabels[selected.unit] ?? selected.unit}.`); return; }
+    const parsedUnitCost = unitCost.trim() ? Number(unitCost.replace(',', '.')) : undefined;
+    if (type === 'ENTRY' && parsedUnitCost !== undefined && (!Number.isFinite(parsedUnitCost) || parsedUnitCost < 0)) { setFormError('Informe um custo unitário válido, igual ou maior que zero.'); return; }
+    if (type === 'EXIT' && !recipient.trim()) { setFormError('Informe o destinatário da saída.'); return; }
     setSaving(true);
     try {
-      await stockflowApi.createStockMovement({ productId, type, quantity: amount, ...(notes.trim() ? { notes: notes.trim() } : {}) });
+      await stockflowApi.createStockMovement({ productId, type, quantity: amount, ...(type === 'ENTRY' && supplierId ? { supplierId } : {}), ...(type === 'ENTRY' && parsedUnitCost !== undefined ? { unitCost: parsedUnitCost } : {}), ...(type === 'EXIT' && recipient.trim() ? { recipient: recipient.trim() } : {}), ...(notes.trim() ? { notes: notes.trim() } : {}) });
       setModalOpen(false); await load();
     } catch (err) { setFormError(err instanceof Error ? err.message : 'Não foi possível registrar a movimentação.'); }
     finally { setSaving(false); }
@@ -91,12 +102,12 @@ export function StockMovementsPage() {
       </div>
       {error && <div className="category-alert category-alert-error">{error}</div>}
       {loading ? <div className="stock-empty-state">Carregando movimentações...</div> : filtered.length === 0 ? <div className="stock-empty-state"><Icon name="boxes" size={28}/><strong>Nenhuma movimentação encontrada</strong><span>Registre uma entrada ou saída para começar.</span></div> :
-        <div className="table-wrap"><table className="data-table stock-movement-table"><thead><tr><th>PRODUTO</th><th>TIPO</th><th>QUANTIDADE</th><th>RESPONSÁVEL</th><th>DATA</th><th>OBSERVAÇÃO</th></tr></thead><tbody>
+        <div className="table-wrap"><table className="data-table stock-movement-table"><thead><tr><th>PRODUTO</th><th>TIPO</th><th>QUANTIDADE</th><th>FORNECEDOR / DESTINATÁRIO</th><th>CUSTO UNITÁRIO</th><th>RESPONSÁVEL</th><th>DATA</th><th>OBSERVAÇÃO</th></tr></thead><tbody>
           {filtered.map((item) => <tr key={item.id}>
             <td><div className="product-cell"><div className="product-thumb"><Icon name="package" size={15}/></div><div><strong>{item.product.name}</strong><span>{item.product.sku}</span></div></div></td>
             <td><span className={`stock-movement-type ${item.type === 'ENTRY' ? 'stock-type-entry' : 'stock-type-exit'}`}>{item.type === 'ENTRY' ? '↑ Entrada' : '↓ Saída'}</span></td>
             <td className="quantity-cell">{item.quantity} {unitLabels[item.product.unit] ?? item.product.unit}</td>
-            <td>{item.performedBy?.name ?? '—'}</td><td>{dateLabel(item.createdAt)}</td><td className="stock-notes-cell">{item.notes || '—'}</td>
+            <td>{item.type === 'ENTRY' ? item.supplier?.name ?? '—' : item.recipient ?? '—'}</td><td>{item.unitCost == null ? '—' : Number(item.unitCost).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td>{item.performedBy?.name ?? '—'}</td><td>{dateLabel(item.createdAt)}</td><td className="stock-notes-cell">{item.notes || '—'}</td>
           </tr>)}
         </tbody></table></div>}
       <div className="stock-results-footer">Exibindo {filtered.length} de {movements.length} movimentações</div>
@@ -108,7 +119,11 @@ export function StockMovementsPage() {
           <div className="stock-movement-form">
             <label className="category-form-field">Produto<select value={productId} onChange={(e) => setProductId(e.target.value)} required><option value="">Selecione um produto</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.sku} (saldo: {p.quantity} {unitLabels[p.unit] ?? p.unit})</option>)}</select></label>
             <label className="category-form-field">Tipo<select value={type} onChange={(e) => setType(e.target.value as StockMovementType)}><option value="ENTRY">Entrada</option><option value="EXIT">Saída</option></select></label>
-            <label className="category-form-field">Quantidade<input type="number" min="1" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} required /></label>
+            <label className="category-form-field">Quantidade<input type="text" inputMode="numeric" value={quantity} onKeyDown={(e) => blockNonNumericKey(e)} onChange={(e) => setQuantity(digitsOnly(e.target.value, 9))} required /></label>
+            {type === 'ENTRY' ? <>
+              <label className="category-form-field">Fornecedor (opcional)<select value={supplierId} onChange={(e) => setSupplierId(e.target.value)}><option value="">Não informado</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label>
+              <label className="category-form-field">Custo unitário de aquisição (R$)<input type="text" inputMode="decimal" value={unitCost} onKeyDown={(e) => blockNonNumericKey(e, true)} onChange={(e) => setUnitCost(decimalOnly(e.target.value))} placeholder="0,00"/><small>Valor histórico desta entrada.</small></label>
+            </> : <label className="category-form-field">Destinatário <input maxLength={160} value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="Pessoa, setor ou unidade que recebeu" required /></label>}
             <label className="category-form-field">Observação (opcional)<textarea rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ex.: Compra, reposição, consumo..." /></label>
           </div>
           {formError && <div className="category-alert category-alert-error" role="alert">{formError}</div>}
