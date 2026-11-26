@@ -7,6 +7,7 @@ import { authRouter } from "./routes/auth.routes";
 import { categoryRouter } from "./routes/category.routes";
 import { dashboardRouter } from "./routes/dashboard.routes";
 import { supplierRouter } from "./routes/supplier.routes";
+import { userRouter } from "./routes/user.routes";
 import { createCsrfProtection } from "./middlewares/csrf";
 import { authenticate } from "./middlewares/authenticate";
 
@@ -49,6 +50,7 @@ export const createApp = (
   app.use("/dashboard", authenticationMiddleware, dashboardRouter);
   app.use("/products", authenticationMiddleware, productRouter);
   app.use("/stock-movements", authenticationMiddleware, stockMovementRouter);
+  app.use("/users", authenticationMiddleware, userRouter);
 
   app.get("/health", (_request, response) => {
     response.status(200).json({
