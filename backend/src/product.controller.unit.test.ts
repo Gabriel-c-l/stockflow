@@ -1,3 +1,4 @@
+import { Prisma } from "./generated/prisma/client";
 import type { Request, Response } from "express";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as productService from "./services/product.service";
@@ -16,6 +17,7 @@ const product = {
   sku: "SKU-CONTROLLER-001",
   name: "Controller product",
   description: null,
+  price: new Prisma.Decimal(0),
   minStock: 2,
   categoryId: null,
   category: null,

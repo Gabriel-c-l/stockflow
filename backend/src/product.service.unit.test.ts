@@ -32,6 +32,7 @@ const product = {
   id: "00000000-0000-0000-0000-000000000001",
   ...productInput,
   description: null,
+  price: new Prisma.Decimal(0),
   categoryId: null,
   category: null,
   unit: "UN",

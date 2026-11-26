@@ -5,6 +5,8 @@ import { productRouter } from "./routes/product.routes";
 import { stockMovementRouter } from "./routes/stock-movement.routes";
 import { authRouter } from "./routes/auth.routes";
 import { categoryRouter } from "./routes/category.routes";
+import { dashboardRouter } from "./routes/dashboard.routes";
+import { supplierRouter } from "./routes/supplier.routes";
 import { createCsrfProtection } from "./middlewares/csrf";
 import { authenticate } from "./middlewares/authenticate";
 
@@ -43,6 +45,8 @@ export const createApp = (
   app.use(csrfMiddleware ?? createCsrfProtection(allowedOrigins));
   app.use("/auth", authRouter);
   app.use("/categories", authenticationMiddleware, categoryRouter);
+  app.use("/suppliers", authenticationMiddleware, supplierRouter);
+  app.use("/dashboard", authenticationMiddleware, dashboardRouter);
   app.use("/products", authenticationMiddleware, productRouter);
   app.use("/stock-movements", authenticationMiddleware, stockMovementRouter);
 

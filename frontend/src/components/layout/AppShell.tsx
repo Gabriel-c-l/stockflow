@@ -1,17 +1,19 @@
 import { Icon, type IconName } from '../ui/Icon';
 import { useState, type ReactNode } from 'react';
+import type { User } from '../../lib/types';
 import { cn } from '../../lib/cn';
 
 const navigation = [
   { label: 'Dashboard', to: '/', icon: 'dashboard' as IconName },
   { label: 'Inventory', to: '/inventory', icon: 'package' as IconName },
+  { label: 'Categories', to: '/categories', icon: 'boxes' as IconName },
   { label: 'Stock movements', to: '/stock-movements', icon: 'activity' as IconName },
   { label: 'Suppliers', to: '/suppliers', icon: 'truck' as IconName },
   { label: 'Users & access', to: '/users', icon: 'users' as IconName },
   { label: 'Reports', to: '/reports', icon: 'command' as IconName },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, user, onLogout }: { children: ReactNode; user: User; onLogout: () => Promise<void> }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const currentPath = window.location.pathname;
   const currentLabel = navigation.find((item) => item.to === currentPath)?.label ?? (currentPath === '/settings' ? 'Settings' : 'Overview');
@@ -44,9 +46,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </a>
           <button className="nav-link help-link"><Icon name="help" size={18} strokeWidth={1.8} /><span>Help & support</span></button>
           <div className="sidebar-user">
-            <div className="avatar avatar-indigo">GC</div>
-            <div className="user-copy"><strong>Gabriel Costa</strong><span>Administrator</span></div>
-            <button className="user-menu icon-button" aria-label="Open account menu"><Icon name="chevron-down" size={16} /></button>
+            <div className="avatar avatar-indigo">{user.name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</div>
+            <div className="user-copy"><strong>{user.name}</strong><span>{user.role === "ADMIN" ? "Administrator" : user.role === "MANAGER" ? "Manager" : "Operator"}</span></div>
+            <button className="user-menu icon-button" aria-label="Sign out" title="Sign out" onClick={() => void onLogout()}><Icon name="chevron-down" size={16} /></button>
           </div>
         </div>
       </aside>
@@ -59,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button className="global-search" aria-label="Search"><Icon name="search" size={16} /><span>Search anything...</span><kbd>⌘ K</kbd></button>
             <button className="icon-button notification-button" aria-label="Notifications"><Icon name="bell" size={18} /><i /></button>
             <div className="topbar-divider" />
-            <button className="topbar-profile" aria-label="Open profile menu"><div className="avatar avatar-indigo">GC</div><Icon name="chevron-down" size={15} /></button>
+            <button className="topbar-profile" aria-label="Open profile menu"><div className="avatar avatar-indigo">{user.name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</div><Icon name="chevron-down" size={15} /></button>
           </div>
         </header>
         <main className="page-content">{children}</main>

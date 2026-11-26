@@ -54,7 +54,7 @@ export interface StockMovement {
 export interface CreateProductInput {
   sku: string;
   name: string;
-  description?: string;
+  description?: string | null;
   minStock?: number;
   categoryId?: string | null;
   unit?: ProductUnit;
@@ -94,4 +94,21 @@ export interface UpdateProductInput {
   categoryId?: string | null;
   unit?: ProductUnit;
   location?: string | null;
+}
+
+
+export interface DashboardSummary {
+  totalProducts: number;
+  totalUnits: number;
+  lowStockProducts: number;
+  outOfStockProducts: number;
+  movementSummary: { entries: number; exits: number; entryQuantity: number; exitQuantity: number };
+  movementSeries: Array<{ date: string; entries: number; exits: number }>;
+  categoryBreakdown: Array<{ id: string; name: string; productCount: number }>;
+  uncategorizedProducts: number;
+  recentMovements: Array<StockMovement & {
+    product: Pick<Product, 'id' | 'sku' | 'name' | 'unit'>;
+    performedBy: { id: string; name: string } | null;
+  }>;
+  periodStart: string;
 }

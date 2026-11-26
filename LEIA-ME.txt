@@ -1,0 +1,15 @@
+StockFlow — Dashboard com dados reais
+
+Este pacote contém somente os arquivos alterados/adicionados para conectar o Dashboard à API.
+Extraia o conteúdo na raiz do projeto StockFlow, mantendo a estrutura de pastas e substituindo os arquivos quando solicitado.
+
+Backend: cria GET /dashboard/summary (protegido por autenticação), com indicadores de produtos/estoque, resumo de movimentações dos últimos 7 dias, distribuição por categoria e últimas 6 movimentações.
+Frontend: substitui os números demonstrativos do Dashboard por dados da API e adiciona atualização manual.
+
+Observação: “Unidades em estoque” soma as quantidades cadastradas, independentemente da unidade de medida. Não é valor financeiro. “Estoque baixo” conta produtos ativos com saldo maior que zero e menor/igual ao estoque mínimo; “Sem estoque” conta saldo zero.
+
+Depois de aplicar:
+1) backend: npm run typecheck
+2) backend: npm test
+3) frontend: npm run build
+4) iniciar backend e frontend e abrir o Dashboard.

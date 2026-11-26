@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "./config/database";
 import * as stockMovementRepository from "./repositories/stock-movement.repository";
+import * as supplierService from "./services/supplier.service";
 import {
   createStockMovement,
   listProductMovements,
@@ -17,6 +18,8 @@ vi.mock("./config/database", () => ({
     $transaction: mocks.transaction,
   },
 }));
+
+vi.mock("./services/supplier.service", () => ({ assertSupplierIsActive: vi.fn() }));
 
 vi.mock("./repositories/stock-movement.repository", () => ({
   createStockMovement: vi.fn(),
@@ -40,6 +43,9 @@ const movement = {
   id: "00000000-0000-0000-0000-000000000002",
   ...movementInput,
   performedById: null,
+  supplierId: null,
+  recipient: null,
+  unitCost: null,
   notes: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -48,6 +54,7 @@ const transactionClient = {};
 describe("StockMovementService unit tests", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(supplierService.assertSupplierIsActive).mockResolvedValue(undefined);
     mockedPrisma.$transaction.mockImplementation(async (callback) =>
       callback(transactionClient as never),
     );
@@ -112,6 +119,17 @@ describe("StockMovementService unit tests", () => {
     ).toHaveBeenCalledWith(transactionClient, productId, 5);
   });
 
+  it("validates the supplier and stores acquisition cost on an ENTRY", async () => {
+    const input = { ...movementInput, supplierId: "00000000-0000-4000-8000-000000000099", unitCost: 12.5 };
+    mockedStockMovementRepository.findProductById.mockResolvedValue({ id: productId });
+    mockedStockMovementRepository.createStockMovement.mockResolvedValue({ ...movement, ...input } as never);
+
+    await createStockMovement(input);
+
+    expect(supplierService.assertSupplierIsActive).toHaveBeenCalledWith(input.supplierId);
+    expect(mockedStockMovementRepository.createStockMovement).toHaveBeenCalledWith(transactionClient, input);
+  });
+
   it("raises INSUFFICIENT_STOCK and does not create a movement", async () => {
     const input = { ...movementInput, type: "EXIT" as const };
     mockedStockMovementRepository.findProductById.mockResolvedValue({
@@ -142,6 +160,9 @@ describe("StockMovementService unit tests", () => {
         quantity: -1,
       }),
     ).toThrow();
+    expect(() => createStockMovementSchema.parse({ ...movementInput, type: "EXIT", unitCost: 5 })).toThrow();
+    expect(() => createStockMovementSchema.parse({ ...movementInput, type: "ENTRY", recipient: "Department" })).toThrow();
+    expect(() => createStockMovementSchema.parse({ ...movementInput, unitCost: -1 })).toThrow();
     expect(mockedPrisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -161,10 +182,10 @@ describe("StockMovementService unit tests", () => {
       id: productId,
     });
     mockedStockMovementRepository.findMovementsByProductId.mockResolvedValue([
-      movement,
+      { ...movement, supplier: null },
     ]);
 
-    await expect(listProductMovements(productId)).resolves.toEqual([movement]);
+    await expect(listProductMovements(productId)).resolves.toEqual([{ ...movement, supplier: null }]);
     expect(
       mockedStockMovementRepository.findMovementsByProductId,
     ).toHaveBeenCalledWith(productId);

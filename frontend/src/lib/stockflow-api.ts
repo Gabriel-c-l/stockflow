@@ -1,7 +1,8 @@
 import { apiRequest } from './api';
-import type { Category, CreateCategoryInput, CreateProductInput, CreateStockMovementInput, Product, ProductListQuery, ProductListResponse, StockMovement, UpdateCategoryInput, UpdateProductInput, User } from './types';
+import type { Category, CreateCategoryInput, CreateProductInput, CreateStockMovementInput, Product, ProductListQuery, ProductListResponse, StockMovement, UpdateCategoryInput, UpdateProductInput, User, DashboardSummary } from './types';
 
 export const stockflowApi = {
+  getDashboardSummary: () => apiRequest<DashboardSummary>("/dashboard/summary"),
   listCategories: (status: "active" | "inactive" | "all" = "active") => apiRequest<Category[]>(`/categories?status=${status}`),
   getCategory: (id: string) => apiRequest<Category>(`/categories/${id}`),
   createCategory: (input: CreateCategoryInput) => apiRequest<Category>("/categories", { method: "POST", body: JSON.stringify(input) }),
@@ -21,6 +22,7 @@ export const stockflowApi = {
   createProduct: (input: CreateProductInput) => apiRequest<Product>('/products', { method: 'POST', body: JSON.stringify(input) }),
   updateProduct: (id: string, input: UpdateProductInput) => apiRequest<Product>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   deactivateProduct: (id: string) => apiRequest<Product>(`/products/${id}`, { method: 'DELETE' }),
+  listStockMovements: () => apiRequest<StockMovement[]>('/stock-movements'),
   createStockMovement: (input: CreateStockMovementInput) => apiRequest<StockMovement>('/stock-movements', { method: 'POST', body: JSON.stringify(input) }),
   listProductMovements: (productId: string) => apiRequest<StockMovement[]>(`/products/${productId}/movements`),
 };
