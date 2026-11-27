@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check } from "k6";
 import { options, getBaseUrl } from "../config/performance.config.js";
-import { loadRunData, warmup } from "./performance-lib.js";
+import { preparePerformanceRun } from "./performance-lib.js";
 
 export { options };
 
@@ -16,9 +16,7 @@ export function setup() {
     );
   }
 
-  const data = loadRunData();
-  warmup(getBaseUrl());
-  return { ...data, executionId };
+  return { ...preparePerformanceRun(getBaseUrl()), executionId };
 }
 
 export default function (data) {

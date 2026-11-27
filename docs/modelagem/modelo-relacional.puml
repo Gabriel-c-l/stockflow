@@ -1,0 +1,95 @@
+@startuml
+title StockFlow - Diagrama Entidade-Relacionamento
+hide circle
+skinparam linetype ortho
+
+entity "User" as User {
+  * id : UUID <<PK>>
+  --
+  * name : TEXT
+  * email : TEXT <<UQ>>
+  * passwordHash : TEXT
+  * role : UserRole
+  * language : VARCHAR(5)
+  * isActive : BOOLEAN
+  * createdAt : TIMESTAMP(3)
+  * updatedAt : TIMESTAMP(3)
+}
+
+entity "Session" as Session {
+  * id : UUID <<PK>>
+  --
+  * userId : UUID <<FK>>
+  * tokenHash : TEXT <<UQ>>
+  * expiresAt : TIMESTAMP(3)
+  revokedAt : TIMESTAMP(3) <<NULL>>
+  * createdAt : TIMESTAMP(3)
+}
+
+entity "Category" as Category {
+  * id : UUID <<PK>>
+  --
+  * name : TEXT <<UQ>>
+  description : TEXT <<NULL>>
+  * isActive : BOOLEAN
+  * createdAt : TIMESTAMP(3)
+  * updatedAt : TIMESTAMP(3)
+}
+
+entity "Product" as Product {
+  * id : UUID <<PK>>
+  --
+  * sku : TEXT <<UQ>>
+  * name : TEXT
+  description : TEXT <<NULL>>
+  * price : DECIMAL(12,2)
+  * quantity : INTEGER
+  * minStock : INTEGER
+  * isActive : BOOLEAN
+  * createdAt : TIMESTAMP(3)
+  * updatedAt : TIMESTAMP(3)
+  categoryId : UUID <<FK, NULL>>
+  * unit : TEXT
+  location : TEXT <<NULL>>
+}
+
+entity "StockMovement" as Movement {
+  * id : UUID <<PK>>
+  --
+  * productId : UUID <<FK>>
+  performedById : UUID <<FK, NULL>>
+  * type : StockMovementType
+  * quantity : INTEGER
+  supplierId : UUID <<FK, NULL>>
+  unitCost : DECIMAL(12,2) <<NULL>>
+  recipient : TEXT <<NULL>>
+  notes : TEXT <<NULL>>
+  * createdAt : TIMESTAMP(3)
+}
+
+entity "Supplier" as Supplier {
+  * id : UUID <<PK>>
+  --
+  * name : TEXT
+  taxId : TEXT <<UQ, NULL>>
+  email : TEXT <<NULL>>
+  phone : TEXT <<NULL>>
+  address : TEXT <<NULL>>
+  notes : TEXT <<NULL>>
+  * isActive : BOOLEAN
+  * createdAt : TIMESTAMP(3)
+  * updatedAt : TIMESTAMP(3)
+}
+
+User ||--o{ Session : possui
+Category o|--o{ Product : classifica
+Product ||--o{ Movement : registra
+User o|--o{ Movement : realiza
+Supplier o|--o{ Movement : fornece
+
+note bottom of Movement
+  type = ENTRY ou EXIT.
+  quantity deve ser maior que zero.
+end note
+
+@enduml

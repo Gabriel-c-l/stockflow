@@ -1,60 +1,57 @@
 # Modelagem do StockFlow
 
-Este diretório reúne a modelagem UML e BPM da entrega atual da API StockFlow.
-Os diagramas foram derivados do documento [Requisitos do StockFlow](../requisitos.md),
-do schema Prisma, das rotas, dos controllers, dos services e dos repositories
-implementados no backend.
+Este diretório reúne os diagramas UML e o fluxo operacional do StockFlow. A
+modelagem foi conferida com o schema Prisma, as rotas, os controllers, os
+services, os repositories e os requisitos documentados na versão atual.
 
 ## Diagramas
 
-| Arquivo | Objetivo |
-|---|---|
-| [casos-de-uso.puml](casos-de-uso.puml) | Representa os atores conceituais e os casos de uso implementados, além do relatório como funcionalidade futura |
-| [classes.puml](classes.puml) | Representa as entidades reais `Product`, `StockMovement` e `StockMovementType` |
-| [sequencia-saida-estoque.puml](sequencia-saida-estoque.puml) | Representa o fluxo real de registro de uma saída, incluindo a transação e os caminhos de sucesso e insuficiência |
-| [processo-gestao-estoque.puml](processo-gestao-estoque.puml) | Representa o processo de gestão de estoque em raias operacionais |
+| Arquivo | Objetivo | Situação |
+|---|---|---|
+| [casos-de-uso.puml](casos-de-uso.puml) | Mostra os três perfis, autenticação, operações de inventário e administração | Atualizado conforme as permissões das rotas |
+| [classes.puml](classes.puml) | Representa os seis modelos persistidos e os dois enums do Prisma | Atualizado conforme `backend/prisma/schema.prisma` |
+| [modelo-relacional.puml](modelo-relacional.puml) | Mostra as entidades, PKs, FKs e cardinalidades do banco relacional | Atualizado conforme schema e migrations |
+| [sequencia-saida-estoque.puml](sequencia-saida-estoque.puml) | Detalha uma saída, a transação e os caminhos de sucesso/erro | Mantido como diagrama de sequência específico |
+| [processo-gestao-estoque.puml](processo-gestao-estoque.puml) | Representa cadastro, entrada, saída e concorrência em raias | Diagrama de atividade PlantUML; não é BPMN 2.0 formal |
 
-## Relação com os requisitos
+## Modelo de dados
 
-- RF01–RF06 correspondem aos casos de uso implementados.
-- RF07 corresponde ao relatório de inventário, representado apenas como futura
-  funcionalidade.
-- RN01–RN12 fundamentam os atributos, decisões e regras dos diagramas.
-- RNF04 fundamenta a transação e o tratamento de saídas concorrentes.
-- CA10, CA14 e CA15 fundamentam os caminhos alternativos de saída insuficiente
-  e concorrência.
+O schema atual possui seis modelos: `User`, `Session`, `Category`, `Product`,
+`StockMovement` e `Supplier`. Entradas e saídas são armazenadas em
+`StockMovement` e diferenciadas pelo enum `StockMovementType` (`ENTRY` e
+`EXIT`). Os perfis são definidos por `UserRole` (`ADMIN`, `MANAGER` e
+`OPERATOR`).
 
-Os atores são conceituais. Não há autenticação, perfis ou permissões
-implementadas na API atual.
+O dicionário de dados está em
+[`../banco-de-dados/dicionario-de-dados.md`](../banco-de-dados/dicionario-de-dados.md)
+e foi construído a partir do schema Prisma e das migrations versionadas.
 
-## Legenda e notação
+## Permissões representadas
 
-- Ator: participante externo representado por `actor`.
-- Caso de uso: funcionalidade executada pela API.
-- Implementado: comportamento coberto pela entrega atual.
-- Futuro/não implementado: requisito solicitado, mas sem suporte no código.
-- Relação simples entre as classes: `1` para `Product`; `0..*` para
-  múltiplas movimentações associadas a ele.
--- Processo: retângulo para atividade, losango para decisão, círculo para
-  início/fim e raias para a responsabilidade de cada participante. As raias do
-  PlantUML representam o processo visualmente, mas não configuram uma
-  implementação formal de BPMN 2.0.
+- Todos os perfis autenticados podem consultar produtos, categorias,
+  fornecedores, dashboard e movimentações, e registrar entradas/saídas.
+- `ADMIN` e `MANAGER` podem criar, editar e desativar produtos, categorias e
+  fornecedores.
+- Somente `ADMIN` pode administrar usuários.
+- O usuário autenticado pode encerrar sua sessão e alterar a preferência de
+  idioma.
+- Relatórios avançados ainda não estão implementados; o item permanece como
+  funcionalidade futura e não é representado como endpoint existente.
+
+## Notação e limites
+
+- Os diagramas de classes e entidade-relacionamento representam os modelos
+  persistidos, não os DTOs, controllers ou serviços internos.
+- `?` identifica atributo opcional/nulo no modelo.
+- `1`, `0..1` e `0..*` representam cardinalidades dos relacionamentos.
+- O diagrama de processo usa raias e elementos de atividade do PlantUML. Ele
+  ajuda a explicar o fluxo, mas não substitui um modelo BPMN 2.0 validado.
+- A existência de um requisito ou caso de uso no documento não significa que
+  a funcionalidade esteja implementada. O status é indicado explicitamente.
 
 ## Visualização
 
-Os arquivos usam extensão `.puml` e podem ser visualizados em:
-
-- extensão PlantUML no VS Code;
-- site ou aplicativo PlantUML que aceite texto `.puml`;
-- servidor PlantUML ou renderizador local configurado pelo ambiente.
-
-Os arquivos podem ser renderizados separadamente, por exemplo:
-
-```text
-casos-de-uso.puml
-classes.puml
-sequencia-saida-estoque.puml
-processo-gestao-estoque.puml
-```
-
-Nenhum desses arquivos altera o backend ou cria entidades adicionais no sistema.
+Os arquivos `.puml` podem ser visualizados pela extensão PlantUML no VS Code,
+por um aplicativo/servidor PlantUML ou por um renderizador local configurado.
+Cada diagrama deve ser renderizado separadamente. O modelo relacional e o
+diagrama de classes são visões complementares do mesmo schema.

@@ -1,5 +1,5 @@
 import http from "k6/http";
-import { sleep } from "k6";
+import { check, sleep } from "k6";
 
 export function loadRunData() {
   const raw = open("../results/performance-run.json");
@@ -34,4 +34,23 @@ export function randomItem(items) {
   }
 
   return items[Math.floor(Math.random() * items.length)];
+}
+
+export function preparePerformanceRun(baseUrl) {
+  const data = loadRunData();
+  warmup(baseUrl);
+  return data;
+}
+
+export function postStockMovement(baseUrl, data, type) {
+  const productId = randomItem(data.movementIds);
+  const response = http.post(
+    `${baseUrl}/stock-movements`,
+    JSON.stringify({ productId, type, quantity: 1 }),
+    { headers: { "Content-Type": "application/json" } },
+  );
+
+  check(response, {
+    [`POST ${type} returns 201`]: (result) => result.status === 201,
+  });
 }

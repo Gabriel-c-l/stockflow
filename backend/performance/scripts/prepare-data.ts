@@ -4,38 +4,18 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
+import {
+  assertPerformanceDatabase,
+  getCliArgument,
+  getPerformanceDatabaseUrl,
+} from "./performance-safety";
 
 const SUPPORTED_COUNTS = new Set([100, 500, 1000]);
 
-const getArgument = (name: string): string | undefined => {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-};
-
 const main = async (): Promise<void> => {
-  const connectionString = process.env.PERF_DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("PERF_DATABASE_URL must be explicitly configured.");
-  }
-  if (process.env.DATABASE_URL !== connectionString) {
-    throw new Error(
-      "DATABASE_URL must exist and be exactly equal to PERF_DATABASE_URL.",
-    );
-  }
+  const connectionString = getPerformanceDatabaseUrl();
 
-  const url = new URL(connectionString);
-  const databaseName = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
-  const localHosts = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
-
-  if (databaseName !== "stockflow_perf") {
-    throw new Error("PERF_DATABASE_URL must use the stockflow_perf database.");
-  }
-
-  if (!localHosts.has(url.hostname)) {
-    throw new Error("PERF_DATABASE_URL must point to a local PostgreSQL host.");
-  }
-
-  const countArgument = getArgument("--count");
+  const countArgument = getCliArgument("--count");
   const count = countArgument ? Number(countArgument) : Number.NaN;
   if (!SUPPORTED_COUNTS.has(count)) {
     throw new Error("Use --count with one of the supported values: 100, 500 or 1000.");
@@ -77,9 +57,7 @@ const main = async (): Promise<void> => {
       SELECT current_database() AS database_name
     `;
 
-    if (currentDatabase[0]?.database_name !== "stockflow_perf") {
-      throw new Error("The connected database is not stockflow_perf.");
-    }
+    assertPerformanceDatabase(currentDatabase[0]?.database_name);
 
     for (let index = 0; index < count; index += 1) {
       const role = index % 2 === 0 ? "query" : ("movement" as const);

@@ -1,29 +1,12 @@
-import http from "k6/http";
-import { check } from "k6";
 import { options, getBaseUrl } from "../config/performance.config.js";
-import { loadRunData, randomItem, warmup } from "./performance-lib.js";
+import { preparePerformanceRun, postStockMovement } from "./performance-lib.js";
 
 export { options };
 
 export function setup() {
-  const data = loadRunData();
-  warmup(getBaseUrl());
-  return data;
+  return preparePerformanceRun(getBaseUrl());
 }
 
 export default function (data) {
-  const productId = randomItem(data.movementIds);
-  const response = http.post(
-    `${getBaseUrl()}/stock-movements`,
-    JSON.stringify({
-      productId,
-      type: "EXIT",
-      quantity: 1,
-    }),
-    { headers: { "Content-Type": "application/json" } },
-  );
-
-  check(response, {
-    "POST EXIT returns 201": (result) => result.status === 201,
-  });
+  postStockMovement(getBaseUrl(), data, "EXIT");
 }

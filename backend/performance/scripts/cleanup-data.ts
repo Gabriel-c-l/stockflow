@@ -3,6 +3,11 @@ import { readFile, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
+import {
+  assertPerformanceDatabase,
+  getCliArgument,
+  getPerformanceDatabaseUrl,
+} from "./performance-safety";
 
 type Registry = {
   runId: string;
@@ -10,38 +15,13 @@ type Registry = {
   products: Array<{ id: string; sku: string; role: "query" | "movement" }>;
 };
 
-const getArgument = (name: string): string | undefined => {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-};
-
 const main = async (): Promise<void> => {
-  const runId = getArgument("--run-id");
+  const runId = getCliArgument("--run-id");
   if (!runId) {
     throw new Error("Use --run-id with the performance run identifier.");
   }
 
-  const connectionString = process.env.PERF_DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("PERF_DATABASE_URL must be explicitly configured.");
-  }
-  if (process.env.DATABASE_URL !== connectionString) {
-    throw new Error(
-      "DATABASE_URL must exist and be exactly equal to PERF_DATABASE_URL.",
-    );
-  }
-
-  const url = new URL(connectionString);
-  const databaseName = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
-  const localHosts = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
-
-  if (databaseName !== "stockflow_perf") {
-    throw new Error("PERF_DATABASE_URL must use the stockflow_perf database.");
-  }
-
-  if (!localHosts.has(url.hostname)) {
-    throw new Error("PERF_DATABASE_URL must point to a local PostgreSQL host.");
-  }
+  const connectionString = getPerformanceDatabaseUrl();
 
   const registryPath = resolve(process.cwd(), "results", "performance-run.json");
   const registry = JSON.parse(await readFile(registryPath, "utf8")) as Registry;
@@ -71,9 +51,7 @@ const main = async (): Promise<void> => {
       SELECT current_database() AS database_name
     `;
 
-    if (currentDatabase[0]?.database_name !== "stockflow_perf") {
-      throw new Error("The connected database is not stockflow_perf.");
-    }
+    assertPerformanceDatabase(currentDatabase[0]?.database_name);
 
     await prisma.$transaction(async (transaction) => {
       const registered = await transaction.product.findMany({

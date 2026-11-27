@@ -3,36 +3,61 @@ left to right direction
 skinparam actorStyle awesome
 skinparam packageStyle rectangle
 
-title StockFlow - Casos de Uso da API
+title StockFlow - Diagrama de Casos de Uso
 
-actor "Operador de estoque" as Operator
-actor "Gestor de estoque" as Manager
+actor "Usuário autenticado" as User
+actor "Administrador" as Admin
+actor "Gestor" as Manager
+actor "Operador" as Operator
 
-rectangle "API StockFlow" {
-  usecase "Cadastrar produto\n(RF01)" as UC01
-  usecase "Listar produtos\n(RF02)" as UC02
-  usecase "Consultar produto\n(RF03)" as UC03
-  usecase "Registrar entrada\n(RF04)" as UC04
-  usecase "Registrar saída\n(RF05)" as UC05
-  usecase "Consultar histórico\n(RF06)" as UC06
-  usecase "Gerar relatório de inventário\n(RF07 - futuro)" as UC07
+Admin --|> User
+Manager --|> User
+Operator --|> User
+
+rectangle "StockFlow" {
+  usecase "Autenticar-se" as UCLogin
+  usecase "Encerrar sessão" as UCLogout
+  usecase "Alterar preferência de idioma" as UCLanguage
+  usecase "Visualizar dashboard" as UCDashboard
+  usecase "Consultar produtos e inventário" as UCProducts
+  usecase "Consultar categorias" as UCCategories
+  usecase "Consultar fornecedores" as UCSuppliers
+  usecase "Consultar movimentações e histórico" as UCHistory
+  usecase "Registrar entrada de estoque" as UCEntry
+  usecase "Registrar saída de estoque" as UCExit
+  usecase "Manter produtos" as UCManageProducts
+  usecase "Manter categorias" as UCManageCategories
+  usecase "Manter fornecedores" as UCManageSuppliers
+  usecase "Administrar usuários" as UCUsers
+  usecase "Gerar relatórios gerenciais" as UCReports
 }
 
-Operator --> UC01
-Operator --> UC02
-Operator --> UC03
-Operator --> UC04
-Operator --> UC05
-Operator --> UC06
+User --> UCLogout
+User --> UCLanguage
+User --> UCDashboard
+User --> UCProducts
+User --> UCCategories
+User --> UCSuppliers
+User --> UCHistory
+User --> UCEntry
+User --> UCExit
 
-Manager --> UC02
-Manager --> UC03
-Manager --> UC06
-Manager --> UC07
+Admin --> UCLogin
+Manager --> UCLogin
+Operator --> UCLogin
 
-note bottom of UC07
-  Não implementado no backend atual.
-  Não representa um endpoint existente.
+Admin --> UCManageProducts
+Admin --> UCManageCategories
+Admin --> UCManageSuppliers
+Admin --> UCUsers
+Manager --> UCManageProducts
+Manager --> UCManageCategories
+Manager --> UCManageSuppliers
+
+note right of UCReports
+  Funcionalidade futura.
+  A tela atual é um placeholder;
+  não existe endpoint de relatório.
 end note
 
 @enduml

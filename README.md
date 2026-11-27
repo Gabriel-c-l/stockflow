@@ -1,312 +1,124 @@
-# StockFlow — Inventory Management API
+# StockFlow — Inventory Management System
 
 [English](README.md) | [Português (Brasil)](README.pt-BR.md)
 
-**Status:** In development
+**Status:** In development — UNISUL academic project.
 
-StockFlow is an academic inventory management project developed for the
-Software Quality Assurance course at UNISUL. The current delivery is a
-backend/API in development, focused on products and stock movements.
+StockFlow is a web application for inventory management. It combines a React interface, a Node.js/Express API, and a PostgreSQL database managed through Prisma.
 
-## Features
+## Implemented features
 
-The currently implemented API provides:
+- Database-backed session authentication using an HttpOnly cookie and Argon2id password hashing.
+- Per-user language preference: English (`en`) or Brazilian Portuguese (`pt-BR`).
+- Product creation, lookup, editing, and soft deactivation.
+- Category and supplier creation, lookup, editing, and soft deactivation.
+- Stock entries and exits recorded in a movement history.
+- Rules preventing negative stock and protecting concurrent exits through conditional updates and PostgreSQL transactions.
+- User management with `ADMIN`, `MANAGER`, and `OPERATOR` roles.
+- Dashboard metrics, recent movements, entry/exit series, and category distribution.
+- Web screens for Dashboard, Inventory, Categories, Stock Movements, Suppliers, Users, and Settings.
 
-- Health check with `GET /health`.
-- Product creation with `POST /products`.
-- Product listing with `GET /products`.
-- Product lookup by ID with `GET /products/:id`.
-- Stock entries and exits with `POST /stock-movements`.
-- Product movement history with `GET /products/:id/movements`.
-
-The `frontend/` directory contains the React application, including the dashboard, inventory, categories, stock movements, suppliers, users and settings screens. The interface supports English and Brazilian Portuguese with account-level language preference.
-
-### Business rules
-
-- SKU is unique.
-- Required fields are validated.
-- Movement quantity must be a positive integer.
-- `ENTRY` movements increase available stock.
-- `EXIT` movements decrease available stock.
-- An exit cannot exceed available stock.
-- Product balance updates and movement registration occur in the same database
-  transaction.
-- Movement history is preserved.
+The Reports screen is currently a visual placeholder. A complete reporting module, dedicated API, and report persistence have not been implemented.
 
 ## Technology stack
 
-| Area | Technology |
+| Layer | Technology |
 |---|---|
 | Runtime | Node.js 24 |
-| Language | TypeScript 7.0.2 |
-| API | Express 5.3.0 |
+| Language | TypeScript 7 |
+| Frontend | React 19, Vite 8 |
+| API | Express 5 |
 | Database | PostgreSQL 16 |
-| ORM and migrations | Prisma 7.10.1 |
-| Validation | Zod 4.6.7 |
-| Unit and integration tests | Vitest 5.1.0 |
-| HTTP integration tests | Supertest 7.3.2 |
-| Continuous integration | GitHub Actions |
+| ORM and migrations | Prisma 7 |
+| Validation | Zod 4 |
+| Backend tests | Vitest 5, Supertest |
+| CI | GitHub Actions |
 | Static analysis | SonarQube Cloud |
-
-Additional backend dependencies include `cors`, `dotenv`, `pg`,
-`@prisma/adapter-pg`, and the generated Prisma Client.
 
 ## Architecture
 
-The backend follows a layered structure:
+The backend separates routes, controllers, services, repositories, middleware, and types. Prisma defines the relational schema and migrations. The frontend separates layout components, UI components, feature screens, and shared libraries.
 
-- **Routes:** map HTTP paths and methods to controllers.
-- **Controllers:** parse requests, call services and build HTTP responses.
-- **Services:** contain business rules and transaction orchestration.
-- **Repositories:** access Products and StockMovements through Prisma.
-- **Types:** define and validate request data with Zod.
-- **Prisma:** defines the PostgreSQL schema, migrations and generated client.
+The relational schema contains six models: `User`, `Session`, `Category`, `Product`, `StockMovement`, and `Supplier`. `StockMovement` represents both entries and exits through the `StockMovementType` enum (`ENTRY`/`EXIT`), avoiding separate tables for the same movement concept.
 
-The current data model contains `Product`, `StockMovement` and `User`, with the
-`ADMIN`, `MANAGER` and `OPERATOR` roles. Authentication is not implemented.
-Historical movements may have no `performedById`; new authorship support is
-prepared for a later authentication stage. Categories, suppliers, employees,
-reports and other entities are not implemented.
+### Main rules and permissions
 
-## API endpoints
+- Product SKUs are unique.
+- Movement quantities must be positive integers.
+- `ENTRY` increases stock; `EXIT` decreases it.
+- An exit cannot exceed available stock.
+- Stock updates and movement creation run in the same transaction.
+- Category, product, and supplier creation, editing, and deactivation require `ADMIN` or `MANAGER`.
+- User administration is restricted to `ADMIN`.
+- Read and dashboard endpoints require an authenticated session.
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/health` | Check API availability. |
-| POST | `/products` | Create a product. |
-| GET | `/products` | List products. |
-| GET | `/products/:id` | Get a product by UUID. |
-| POST | `/stock-movements` | Register an `ENTRY` or `EXIT`. |
-| GET | `/products/:id/movements` | Get a product movement history. |
-| POST | `/auth/login` | Authenticate a user and create an HttpOnly session cookie. |
-| POST | `/auth/logout` | Revoke the current session and clear the cookie. |
-| GET | `/auth/me` | Return the safe profile of the authenticated user, including language preference. |
-| PATCH | `/auth/preferences` | Update the authenticated user language (`en` or `pt-BR`). |
-
-Authentication is implemented by a server-side session stored in PostgreSQL.
-The database stores only a SHA-256 hash of the random session token. Passwords
-are stored using Argon2id. Product and stock movement routes are not protected
-by a role matrix in this stage.
-
-The API uses `CORS_ORIGINS` for an explicit comma-separated allowlist. The
-development example is `http://localhost:5173`. Requests without an `Origin`
-are allowed for server-to-server calls and command-line tools.
-
-## Project structure
-
-The relevant repository structure is:
-
-```text
-stockflow/
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── backend/
-│   ├── prisma/
-│   │   ├── migrations/
-│   │   └── schema.prisma
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── database.ts
-│   │   ├── controllers/
-│   │   │   ├── product.controller.ts
-│   │   │   └── stock-movement.controller.ts
-│   │   ├── repositories/
-│   │   │   ├── product.repository.ts
-│   │   │   └── stock-movement.repository.ts
-│   │   ├── routes/
-│   │   │   ├── product.routes.ts
-│   │   │   └── stock-movement.routes.ts
-│   │   ├── services/
-│   │   │   ├── product.service.ts
-│   │   │   └── stock-movement.service.ts
-│   │   ├── types/
-│   │   │   ├── product.ts
-│   │   │   └── stock-movement.ts
-│   │   ├── scripts/
-│   │   │   └── test-database.ts
-│   │   ├── system/
-│   │   │   └── stockflow.system.test.ts
-│   │   ├── server.ts
-│   │   ├── server.test.ts
-│   │   ├── products.test.ts
-│   │   ├── stock-movement.test.ts
-│   │   ├── product.service.unit.test.ts
-│   │   └── stock-movement.service.unit.test.ts
-│   ├── .env.example
-│   ├── package.json
-│   ├── prisma7.config.ts
-│   ├── tsconfig.json
-│   ├── vitest.config.mts
-│   └── vitest.system.config.mts
-├── docs/
-│   └── test-plan/
-│       └── plano-de-testes.md
-├── frontend/
-│   ├── src/
-│   └── tests/
-├── docker-compose.yml
-├── LICENSE
-├── README.md
-└── README.pt-BR.md
-```
-
-Generated Prisma Client files under `backend/src/generated/prisma` are omitted
-from this summary.
-
-## Installation and execution
+## Local setup
 
 ### Requirements
 
-- Node.js 24.
-- npm.
-- PostgreSQL 16 or a compatible PostgreSQL test instance.
+- Node.js 24 and npm.
+- PostgreSQL 16 or a compatible version.
 
-### Setup
+### Backend
 
-```bash
-git clone https://github.com/Gabriel-c-l/stockflow.git
-cd stockflow/backend
+```powershell
+cd backend
 npm ci
 ```
 
-Create a local `.env` from `.env.example` and configure the PostgreSQL
-connection in `DATABASE_URL`. Keep `.env` local and do not commit it. The
-example also contains:
+Create `backend/.env` from `.env.example` and configure `DATABASE_URL`, `PORT`, and `CORS_ORIGINS`. Do not commit `.env`. Then run:
 
-```env
-PORT=3333
-CORS_ORIGINS=http://localhost:5173
-```
-
-Prepare a PostgreSQL database for the backend, then generate the client and
-apply the existing migrations:
-
-```bash
+```powershell
 npx prisma generate
 npx prisma migrate deploy
-```
-
-Start the application:
-
-```bash
 npm run dev
 ```
 
-The production-style commands are:
+The API listens on `http://localhost:3333` by default.
 
-```bash
+### Frontend
+
+In a separate terminal:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite listens on `http://localhost:5173` by default. Keep the backend and PostgreSQL running to use the complete application.
+
+## Verification
+
+Backend (`backend/`):
+
+```powershell
+npm run typecheck
 npm run build
-npm start
-```
-
-The database connection can be checked with:
-
-```bash
-npm run db:test
-```
-
-After the session migration is reviewed and applied, the first administrator
-can be created explicitly with:
-
-```bash
-npm run auth:bootstrap
-```
-
-Configure `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` and
-`BOOTSTRAP_ADMIN_PASSWORD` only in the local environment. The command is
-idempotent and does not create additional administrators after the first one
-exists.
-
-## Tests and quality
-
-The project currently reports 44 automated tests:
-
-- 11 unit tests.
-- 23 integration tests.
-- 10 system tests (E2E).
-
-Run the unit and integration suite with coverage:
-
-```bash
 npm test
-```
-
-Run the system suite separately:
-
-```bash
-npm run build
 npm run test:system
 ```
 
-The testing levels have different responsibilities:
+Frontend (`frontend/`):
 
-- Unit tests isolate components and mock repositories or Prisma transactions.
-- Integration tests exercise the API with Supertest and real PostgreSQL
-  persistence.
-- System tests start the compiled server as an independent process and use
-  real HTTP requests.
-
-The coverage levels recorded for the project are:
-
-| Metric | Recorded coverage |
-|---|---:|
-| Statements | 87.16% |
-| Branches | 83.63% |
-| Functions | 85.71% |
-| Lines | 87.07% |
-
-The Vitest configuration requires at least 75% for all four metrics. GitHub
-Actions automates dependency installation, Prisma generation, migrations,
-typecheck, build, coverage tests and system tests. SonarQube Cloud performs
-static analysis and evaluates the Quality Gate. No SonarQube metric values are
-claimed here beyond the configured analysis and the results documented by the
-quality process.
-
-Performance and usability tests have not been declared as completed. They
-remain activities to be defined and executed for the academic scope.
-
-## Limitations and next steps
-
-The project is in development and the current delivery is a backend/API.
-The following items are not implemented:
-
-- Authentication and authorization.
-- Employee management.
-- Suppliers.
-- Categories.
-- Reports.
-- Low-stock monitoring.
-- Frontend application and visual interface.
-- Formal performance and usability evaluation.
-
-Future work should define and implement the required domain models and
-endpoints before testing them, and should update the documentation and test
-plan as the scope evolves.
-
-## Documentation
-
-- [Test plan](docs/test-plan/plano-de-testes.md)
-- [English README](README.md)
-- [Portuguese README](README.pt-BR.md)
-- [GitHub Actions workflow](.github/workflows/ci.yml)
-- [Prisma schema](backend/prisma/schema.prisma)
-
-## Academic information
-
-- **Institution:** Universidade do Sul de Santa Catarina (UNISUL)
-- **Course:** Systems Analysis and Development
-- **Subject:** Software Quality Assurance
-- **Project:** A3 — Inventory Management System
-- **Author:** Gabriel Corrêa Lopes
-
-## Language preference
-
-The interface defaults to English. Authenticated users can switch between English (`en`) and Brazilian Portuguese (`pt-BR`) in Settings. The selected language is stored on the `User` record and cached locally for faster initial rendering. Apply the migrations before running the updated API:
-
-```bash
-cd backend
-npx prisma migrate deploy
+```powershell
+npm run typecheck
+npm run test:run
+npm run build
 ```
 
-Only interface copy and standardized system labels are localized. Product names, category names, supplier details, notes and other user-entered database content are displayed as originally saved.
+GitHub Actions runs backend checks, system tests, and SonarQube Cloud analysis. The frontend has an independent typecheck, test, and build job. Approval of the Quality Gate must be confirmed in the latest workflow run.
+
+## Performance testing
+
+The k6 scripts are located in `backend/performance/`. They require an isolated local database named `stockflow_perf`. Read `backend/performance/README.md` before preparing data, running load, or cleanup commands. Load tests still need to be executed and acceptance thresholds need to be agreed. Never run these scripts against development or production databases.
+
+## Academic documentation
+
+- `docs/requisitos.md`: requirements and implementation status.
+- `docs/test-plan/plano-de-testes.md`: test strategy and quality evidence.
+- `docs/modelagem/`: use-case, class, sequence, process, and relational-model PlantUML diagrams.
+- `docs/banco-de-dados/dicionario-de-dados.md`: data dictionary derived from the schema and migrations.
+- `backend/prisma/schema.prisma`: implemented relational model.
+
+The Database course presentation still needs to be prepared. Diagrams must be rendered and visually reviewed. Usability and performance evidence also needs to be collected before the A3 submissions.

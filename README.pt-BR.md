@@ -1,324 +1,124 @@
-# StockFlow — API de Gestão de Estoque
+# StockFlow — Sistema de Gestão de Estoque
 
 [English](README.md) | [Português (Brasil)](README.pt-BR.md)
 
-**Status:** Em desenvolvimento
+**Status:** Em desenvolvimento — projeto acadêmico da UNISUL.
 
-O StockFlow é um projeto acadêmico de gestão de estoque desenvolvido para a
-unidade curricular de Garantia e Qualidade de Software da UNISUL. A entrega
-atual é um backend/API em desenvolvimento, com foco em produtos e
-movimentações de estoque.
+O StockFlow é uma aplicação web para gestão de estoque. A solução reúne uma interface React, uma API Node.js/Express e um banco PostgreSQL gerenciado pelo Prisma.
 
-## Funcionalidades
+## Funcionalidades implementadas
 
-A API atualmente implementada oferece:
+- Autenticação por sessão persistida no PostgreSQL, com cookie HttpOnly e senha armazenada com Argon2id.
+- Preferência de idioma por usuário: inglês (`en`) ou português brasileiro (`pt-BR`).
+- Cadastro, consulta, edição e desativação lógica de produtos.
+- Categorias e fornecedores, com operações de cadastro, consulta, edição e desativação lógica.
+- Entradas e saídas de estoque registradas no histórico de movimentações.
+- Regras que impedem estoque negativo e protegem saídas concorrentes por atualização condicional e transação no PostgreSQL.
+- Gestão de usuários e perfis `ADMIN`, `MANAGER` e `OPERATOR`.
+- Dashboard com indicadores, movimentações recentes, série de entradas/saídas e distribuição por categoria.
+- Interface web com Dashboard, Inventário, Categorias, Movimentações, Fornecedores, Usuários e Configurações.
 
-- Verificação de saúde com `GET /health`.
-- Cadastro de produtos com `POST /products`.
-- Listagem de produtos com `GET /products`.
-- Consulta de produto por ID com `GET /products/:id`.
-- Entradas e saídas de estoque com `POST /stock-movements`.
-- Histórico de movimentações com `GET /products/:id/movements`.
+A tela de Relatórios existe como placeholder visual; não há ainda um módulo completo de relatórios, API específica ou persistência de relatórios.
 
-A pasta `frontend/` existe apenas como estrutura inicial do projeto; nenhuma
-funcionalidade de frontend está implementada na entrega atual.
+## Tecnologias
 
-### Regras de negócio
-
-- O SKU é único.
-- Os campos obrigatórios são validados.
-- A quantidade da movimentação deve ser um inteiro positivo.
-- Movimentações `ENTRY` aumentam o estoque disponível.
-- Movimentações `EXIT` diminuem o estoque disponível.
-- Uma saída não pode exceder o estoque disponível.
-- A atualização do saldo do produto e o registro da movimentação ocorrem na
-  mesma transação do banco de dados.
-- O histórico de movimentações é preservado.
-
-## Stack tecnológica
-
-| Área | Tecnologia |
+| Camada | Tecnologia |
 |---|---|
 | Runtime | Node.js 24 |
-| Linguagem | TypeScript 7.0.2 |
-| API | Express 5.3.0 |
+| Linguagem | TypeScript 7 |
+| Frontend | React 19, Vite 8 |
+| API | Express 5 |
 | Banco de dados | PostgreSQL 16 |
-| ORM e migrations | Prisma 7.10.1 |
-| Validação | Zod 4.6.7 |
-| Testes unitários e de integração | Vitest 5.1.0 |
-| Testes HTTP de integração | Supertest 7.3.2 |
-| Integração contínua | GitHub Actions |
+| ORM e migrações | Prisma 7 |
+| Validação | Zod 4 |
+| Testes backend | Vitest 5, Supertest |
+| CI | GitHub Actions |
 | Análise estática | SonarQube Cloud |
-
-As dependências adicionais do backend incluem `cors`, `dotenv`, `pg`,
-`@prisma/adapter-pg` e o Prisma Client gerado.
 
 ## Arquitetura
 
-O backend segue uma estrutura em camadas:
+O backend separa rotas, controllers, services, repositories, middlewares e tipos. O Prisma define o schema relacional e as migrações. O frontend separa componentes de layout, componentes de UI, funcionalidades e bibliotecas compartilhadas.
 
-- **Routes:** mapeiam caminhos e métodos HTTP para controllers.
-- **Controllers:** interpretam requisições, chamam services e montam respostas
-  HTTP.
-- **Services:** concentram regras de negócio e orquestração de transações.
-- **Repositories:** acessam Products e StockMovements por meio do Prisma.
-- **Types:** definem e validam dados de entrada com Zod.
-- **Prisma:** define o schema PostgreSQL, as migrations e o client gerado.
+O schema relacional possui seis modelos: `User`, `Session`, `Category`, `Product`, `StockMovement` e `Supplier`. `StockMovement` representa tanto entradas quanto saídas por meio do enum `StockMovementType` (`ENTRY`/`EXIT`), evitando tabelas duplicadas para o mesmo conceito de movimentação.
 
-O modelo de dados atual contém `Product`, `StockMovement` e `User`, com os
-papéis `ADMIN`, `MANAGER` e `OPERATOR`. A autenticação ainda não está
-implementada. Movimentações históricas podem não possuir `performedById`; o
-suporte à identificação do autor foi preparado para uma etapa posterior.
-Categorias, fornecedores, funcionários, relatórios e outras entidades não estão
-implementados.
+### Regras e permissões principais
 
-## Endpoints da API
+- O SKU do produto é único.
+- Quantidades de movimentação devem ser inteiros positivos.
+- `ENTRY` aumenta o saldo; `EXIT` reduz o saldo.
+- Uma saída não pode exceder o saldo disponível.
+- Atualização do saldo e criação da movimentação ocorrem na mesma transação.
+- Categorias, produtos e fornecedores exigem `ADMIN` ou `MANAGER` para criação, edição e desativação.
+- A gestão de usuários é restrita a `ADMIN`.
+- Os endpoints de leitura e dashboard exigem sessão autenticada.
 
-| Método | Endpoint | Finalidade |
-|---|---|---|
-| GET | `/health` | Verificar a disponibilidade da API. |
-| POST | `/products` | Cadastrar um produto. |
-| GET | `/products` | Listar produtos. |
-| GET | `/products/:id` | Consultar um produto por UUID. |
-| POST | `/stock-movements` | Registrar uma `ENTRY` ou `EXIT`. |
-| GET | `/products/:id/movements` | Consultar o histórico de movimentações. |
-| POST | `/auth/login` | Autenticar um usuário e criar um cookie HttpOnly de sessão. |
-| POST | `/auth/logout` | Revogar a sessão atual e limpar o cookie. |
-| GET | `/auth/me` | Retornar o perfil seguro do usuário autenticado. |
-
-A autenticação utiliza sessões persistidas no PostgreSQL. O banco armazena
-somente o hash SHA-256 do token aleatório da sessão. As senhas são armazenadas
-com Argon2id. As rotas de produtos e movimentações ainda não possuem uma matriz
-completa de permissões nesta etapa.
-
-A API utiliza `CORS_ORIGINS` para uma lista explícita de origens separadas por
-vírgula. O exemplo de desenvolvimento é `http://localhost:5173`. Requisições
-sem `Origin` são permitidas para chamadas servidor-servidor e ferramentas de
-linha de comando.
-
-## Estrutura do projeto
-
-A estrutura relevante do repositório é:
-
-```text
-stockflow/
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── backend/
-│   ├── prisma/
-│   │   ├── migrations/
-│   │   └── schema.prisma
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── database.ts
-│   │   ├── controllers/
-│   │   │   ├── product.controller.ts
-│   │   │   └── stock-movement.controller.ts
-│   │   ├── repositories/
-│   │   │   ├── product.repository.ts
-│   │   │   └── stock-movement.repository.ts
-│   │   ├── routes/
-│   │   │   ├── product.routes.ts
-│   │   │   └── stock-movement.routes.ts
-│   │   ├── services/
-│   │   │   ├── product.service.ts
-│   │   │   └── stock-movement.service.ts
-│   │   ├── types/
-│   │   │   ├── product.ts
-│   │   │   └── stock-movement.ts
-│   │   ├── scripts/
-│   │   │   └── test-database.ts
-│   │   ├── system/
-│   │   │   └── stockflow.system.test.ts
-│   │   ├── server.ts
-│   │   ├── server.test.ts
-│   │   ├── products.test.ts
-│   │   ├── stock-movement.test.ts
-│   │   ├── product.service.unit.test.ts
-│   │   └── stock-movement.service.unit.test.ts
-│   ├── .env.example
-│   ├── package.json
-│   ├── prisma7.config.ts
-│   ├── tsconfig.json
-│   ├── vitest.config.mts
-│   └── vitest.system.config.mts
-├── docs/
-│   └── test-plan/
-│       └── plano-de-testes.md
-├── frontend/
-│   ├── src/
-│   └── tests/
-├── docker-compose.yml
-├── LICENSE
-├── README.md
-└── README.pt-BR.md
-```
-
-Os arquivos gerados do Prisma em `backend/src/generated/prisma` foram omitidos
-desse resumo.
-
-## Instalação e execução
+## Execução local
 
 ### Requisitos
 
-- Node.js 24.
-- npm.
-- PostgreSQL 16 ou uma instância PostgreSQL de testes compatível.
+- Node.js 24 e npm.
+- PostgreSQL 16 ou versão compatível.
 
-### Configuração
+### Backend
 
-```bash
-git clone https://github.com/Gabriel-c-l/stockflow.git
-cd stockflow/backend
+```powershell
+cd backend
 npm ci
 ```
 
-Crie um `.env` local a partir de `.env.example` e configure a conexão
-PostgreSQL em `DATABASE_URL`. Mantenha o `.env` local e não o versione. O
-exemplo também contém:
+Crie `backend/.env` a partir de `.env.example` e configure `DATABASE_URL`, `PORT` e `CORS_ORIGINS`. Não versione o `.env`. Depois execute:
 
-```env
-PORT=3333
-CORS_ORIGINS=http://localhost:5173
-```
-
-Prepare um banco PostgreSQL para o backend, gere o client e aplique as
-migrations existentes:
-
-```bash
+```powershell
 npx prisma generate
 npx prisma migrate deploy
-```
-
-Inicie a aplicação:
-
-```bash
 npm run dev
 ```
 
-Os comandos para execução em modo de produção são:
+A API inicia, por padrão, em `http://localhost:3333`.
 
-```bash
+### Frontend
+
+Em outro terminal:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+O Vite inicia, por padrão, em `http://localhost:5173`. Para usar a aplicação completa, mantenha o backend e o PostgreSQL em execução.
+
+## Verificações
+
+Backend (`backend/`):
+
+```powershell
+npm run typecheck
 npm run build
-npm start
-```
-
-A conexão com o banco pode ser verificada com:
-
-```bash
-npm run db:test
-```
-
-Depois que a migration de sessões for revisada e aplicada, o primeiro
-administrador pode ser criado explicitamente com:
-
-```bash
-npm run auth:bootstrap
-```
-
-Configure `BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL` e
-`BOOTSTRAP_ADMIN_PASSWORD` somente no ambiente local. O comando é idempotente
-e não cria novos administradores depois que o primeiro já existir.
-
-## Testes e qualidade
-
-O projeto registra atualmente 44 testes automatizados:
-
-- 11 testes unitários.
-- 23 testes de integração.
-- 10 testes de sistema (E2E).
-
-Execute a suíte unitária e de integração com cobertura:
-
-```bash
 npm test
-```
-
-Execute a suíte de sistema separadamente:
-
-```bash
-npm run build
 npm run test:system
 ```
 
-Os níveis de teste têm responsabilidades diferentes:
+Frontend (`frontend/`):
 
-- Testes unitários isolam componentes e fazem mock dos repositories ou das
-  transações Prisma.
-- Testes de integração exercitam a API com Supertest e persistência real no
-  PostgreSQL.
-- Testes de sistema iniciam o servidor compilado como processo independente e
-  usam requisições HTTP reais.
-
-Os níveis de cobertura registrados para o projeto são:
-
-| Métrica | Cobertura registrada |
-|---|---:|
-| Statements | 87,16% |
-| Branches | 83,63% |
-| Functions | 85,71% |
-| Lines | 87,07% |
-
-A configuração do Vitest exige pelo menos 75% nas quatro métricas. O GitHub
-Actions automatiza a instalação das dependências, geração do Prisma Client,
-migrations, typecheck, build, testes com cobertura e testes de sistema. O
-SonarQube Cloud realiza análise estática e verifica o Quality Gate. Nenhuma
-métrica do SonarQube é declarada aqui além da análise configurada e dos
-resultados documentados pelo processo de qualidade.
-
-Testes de desempenho e usabilidade não são apresentados como concluídos. Essas
-atividades ainda precisam ser definidas e executadas no escopo acadêmico.
-
-## Limitações e próximos passos
-
-O projeto está em desenvolvimento e a entrega atual é um backend/API. Os itens
-a seguir não estão implementados:
-
-- Autenticação e autorização.
-- Gerenciamento de funcionários.
-- Fornecedores.
-- Categorias.
-- Relatórios.
-- Monitoramento de estoque baixo.
-- Aplicação frontend e interface visual.
-- Avaliação formal de desempenho e usabilidade.
-
-Os próximos trabalhos devem definir e implementar os modelos de domínio e
-endpoints necessários antes de testá-los, além de atualizar a documentação e o
-plano de testes conforme o escopo evoluir.
-
-## Documentação
-
-- [Plano de testes](docs/test-plan/plano-de-testes.md)
-- [README em inglês](README.md)
-- [README em português](README.pt-BR.md)
-- [Workflow do GitHub Actions](.github/workflows/ci.yml)
-- [Schema Prisma](backend/prisma/schema.prisma)
-
-## Informações acadêmicas
-
-- **Instituição:** Universidade do Sul de Santa Catarina (UNISUL)
-- **Curso:** Análise e Desenvolvimento de Sistemas
-- **Unidade curricular:** Garantia e Qualidade de Software
-- **Projeto:** A3 — Sistema de Gestão de Estoque
-- **Autor:** Gabriel Corrêa Lopes
-
-## Cadastro de produtos (evolução)
-
-O cadastro agora prevê categoria opcional, unidade de medida e localização física. As unidades aceitas pela API são `UN`, `CX`, `PCT`, `KG`, `G`, `L`, `ML`, `M` e `CM`. Produtos já existentes recebem `UN` como unidade padrão após a migração.
-
-Categorias possuem nome único, descrição e desativação lógica. Uma categoria não pode ser desativada enquanto houver produtos ativos vinculados a ela. A quantidade em estoque continua sendo alterada somente por movimentações de entrada e saída.
-
-Consulte `NEXT-STEP-CATEGORIES.md` para os endpoints e os passos de migração.
-
-## Preferência de idioma
-
-A interface usa inglês como idioma inicial. Usuários autenticados podem alternar entre inglês (`en`) e português do Brasil (`pt-BR`) em Configurações. A preferência é armazenada no registro `User` e mantida em cache local para acelerar a exibição inicial. Aplique as migrações antes de iniciar a API atualizada:
-
-```bash
-cd backend
-npx prisma migrate deploy
+```powershell
+npm run typecheck
+npm run test:run
+npm run build
 ```
 
-Somente os textos da interface e os rótulos padronizados do sistema são localizados. Nomes de produtos e categorias, dados de fornecedores, observações e outros conteúdos cadastrados pelos usuários permanecem como foram salvos.
+O workflow do GitHub Actions executa as verificações do backend, testes de sistema e análise SonarQube Cloud. O frontend também possui um job independente de typecheck, testes e build. A aprovação final do Quality Gate deve ser confirmada na execução mais recente do workflow.
+
+## Testes de desempenho
+
+Os scripts k6 estão em `backend/performance/`. Eles usam exclusivamente um banco local isolado chamado `stockflow_perf`. Consulte `backend/performance/README.md` antes de executar qualquer preparação, carga ou limpeza. Os testes de carga ainda precisam ser executados e seus critérios de aceitação precisam ser definidos. Nunca execute esses scripts contra o banco de desenvolvimento ou produção.
+
+## Documentação acadêmica
+
+- `docs/requisitos.md`: requisitos e situação de implementação.
+- `docs/test-plan/plano-de-testes.md`: estratégia e evidências de qualidade.
+- `docs/modelagem/`: diagramas de casos de uso, classes, sequência, processo e modelo relacional em PlantUML.
+- `docs/banco-de-dados/dicionario-de-dados.md`: dicionário de dados derivado do schema e das migrations.
+- `backend/prisma/schema.prisma`: modelo relacional implementado.
+
+A apresentação específica da UC Banco de Dados ainda precisa ser preparada. Os diagramas devem ser renderizados e conferidos visualmente. As evidências de usabilidade e desempenho também precisam ser coletadas antes da entrega final das A3.
