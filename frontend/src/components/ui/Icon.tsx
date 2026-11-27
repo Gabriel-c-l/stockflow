@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from 'react';
 
-export type IconName = 'activity' | 'bell' | 'chevron-down' | 'help' | 'command' | 'dashboard' | 'package' | 'search' | 'settings' | 'users' | 'truck' | 'construction' | 'arrow-right' | 'arrow-up-right' | 'arrow-down-right' | 'boxes' | 'alert' | 'plus' | 'trending-up';
+export type IconName = 'activity' | 'bell' | 'chevron-down' | 'help' | 'command' | 'dashboard' | 'package' | 'search' | 'settings' | 'users' | 'truck' | 'construction' | 'arrow-right' | 'arrow-up-right' | 'arrow-down-right' | 'boxes' | 'alert' | 'plus' | 'trending-up' | 'sun' | 'moon' | 'check' | 'log-out' | 'panel-left';
 
 const paths: Record<IconName, ReactNode> = {
   activity: <><path d="M3 12h4l3-8 4 16 3-8h4" /></>,
@@ -21,6 +21,11 @@ const paths: Record<IconName, ReactNode> = {
   boxes: <><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9L12 2Z" /><path d="m12 11 8-4.5M12 11 4 6.5M12 11v9M4 11l8 4.5 8-4.5" /></>,
   alert: <><path d="m10.3 3.9-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.1l-8-14a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></>,
   plus: <path d="M12 5v14M5 12h14" />,
+  sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></>,
+  moon: <path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z" />,
+  check: <path d="m5 12 4 4L19 6" />,
+  'log-out': <><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></>,
+  'panel-left': <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M14 9l-3 3 3 3" /></>,
   'trending-up': <><path d="m3 17 6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
 };
 

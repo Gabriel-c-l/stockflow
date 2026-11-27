@@ -1,0 +1,364 @@
+/*
+ * StockFlow shared visual system.
+ * One semantic palette for every feature screen; loaded after feature styles.
+ */
+:root {
+  --sf-page-bg: #f6f8fb;
+  --sf-surface: #ffffff;
+  --sf-surface-subtle: #f8fafc;
+  --sf-surface-raised: #ffffff;
+  --sf-border: #e5eaf1;
+  --sf-border-strong: #d6deea;
+  --sf-text-primary: #263244;
+  --sf-text-secondary: #526176;
+  --sf-text-muted: #718096;
+  --sf-text-faint: #8794a6;
+  --sf-icon-bg: #edf3fc;
+  --sf-icon-fg: #4775bd;
+  --sf-icon-blue-bg: #edf3fd;
+  --sf-icon-blue-fg: #3972cc;
+  --sf-icon-green-bg: #eaf7f1;
+  --sf-icon-green-fg: #28976d;
+  --sf-icon-amber-bg: #fff6e7;
+  --sf-icon-amber-fg: #a66d17;
+  --sf-icon-violet-bg: #f2effb;
+  --sf-icon-violet-fg: #8064c4;
+  --sf-avatar-bg: #e8effb;
+  --sf-avatar-fg: #355fa6;
+  --sf-avatar-border: transparent;
+  --sf-control-bg: #ffffff;
+  --sf-control-border: #e7eaf0;
+  --sf-control-text: #778395;
+  --sf-chart-hole: #ffffff;
+  --sf-chart-value: #293446;
+  --sf-chart-muted: #788495;
+  --sf-chart-strong: #3d4858;
+  --color-text: var(--sf-text-primary);
+  --color-muted: var(--sf-text-muted);
+  --color-border: var(--sf-border);
+  --color-surface: var(--sf-surface);
+  --color-background: var(--sf-page-bg);
+  --sf-success: #21845f;
+  --sf-success-bg: #e8f5ee;
+  --sf-warning: #a66d17;
+  --sf-warning-bg: #fff3dc;
+  --sf-danger: #b64c4c;
+  --sf-danger-bg: #fff0ef;
+  --sf-info: #3568b2;
+  --sf-info-bg: #edf3fc;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --sf-page-bg: #151e2b;
+  --sf-surface: #202b3b;
+  --sf-surface-subtle: #253246;
+  --sf-surface-raised: #29384d;
+  --sf-border: #344257;
+  --sf-border-strong: #46566d;
+  --sf-text-primary: #e8eef7;
+  --sf-text-secondary: #c2cede;
+  --sf-text-muted: #aab8ca;
+  --sf-text-faint: #93a3b8;
+  --sf-icon-bg: #2b3d56;
+  --sf-icon-fg: #a9c7f5;
+  --sf-icon-blue-bg: #293c56;
+  --sf-icon-blue-fg: #9fc1f4;
+  --sf-icon-green-bg: #203d34;
+  --sf-icon-green-fg: #75d2aa;
+  --sf-icon-amber-bg: #443721;
+  --sf-icon-amber-fg: #f0bd69;
+  --sf-icon-violet-bg: #382f50;
+  --sf-icon-violet-fg: #c0adf1;
+  --sf-avatar-bg: #2b3d56;
+  --sf-avatar-fg: #c2d7f7;
+  --sf-avatar-border: var(--sf-border);
+  --sf-control-bg: #29384d;
+  --sf-control-border: #46566d;
+  --sf-control-text: #c2cede;
+  --sf-chart-hole: #202b3b;
+  --sf-chart-value: #e8eef7;
+  --sf-chart-muted: #aab8ca;
+  --sf-chart-strong: #e0e8f3;
+  --color-text: var(--sf-text-primary);
+  --color-muted: var(--sf-text-muted);
+  --color-border: var(--sf-border);
+  --color-surface: var(--sf-surface);
+  --color-background: var(--sf-page-bg);
+  --sf-success: #62c79a;
+  --sf-success-bg: #203d34;
+  --sf-warning: #f0bd69;
+  --sf-warning-bg: #443721;
+  --sf-danger: #f08f8b;
+  --sf-danger-bg: #442c32;
+  --sf-info: #9fc1f4;
+  --sf-info-bg: #293c56;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-column {
+  color: var(--sf-text-primary);
+  background: var(--sf-page-bg);
+}
+
+/* Shared surfaces */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .category-management-card,
+html[data-theme="dark"] .products-card,
+html[data-theme="dark"] .stock-movements-card,
+html[data-theme="dark"] .users-management-card,
+html[data-theme="dark"] .users-roles-card,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .profile-dropdown,
+html[data-theme="dark"] .category-modal {
+  color: var(--sf-text-primary);
+  background: var(--sf-surface);
+  border-color: var(--sf-border);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .data-table th,
+html[data-theme="dark"] .data-table td,
+html[data-theme="dark"] .category-table th,
+html[data-theme="dark"] .category-table td {
+  border-color: var(--sf-border);
+}
+html[data-theme="dark"] .data-table th,
+html[data-theme="dark"] .category-table th {
+  color: var(--sf-text-muted);
+}
+html[data-theme="dark"] .data-table td,
+html[data-theme="dark"] .category-name-cell,
+html[data-theme="dark"] .category-name-cell strong,
+html[data-theme="dark"] .products-product-button,
+html[data-theme="dark"] .products-product-button strong,
+html[data-theme="dark"] .supplier-name strong,
+html[data-theme="dark"] .supplier-contact strong,
+html[data-theme="dark"] .users-name-cell strong,
+html[data-theme="dark"] .users-role-grid strong,
+html[data-theme="dark"] .settings-section-heading h2,
+html[data-theme="dark"] .settings-option strong,
+html[data-theme="dark"] .settings-account-role strong,
+html[data-theme="dark"] .section-heading h2,
+html[data-theme="dark"] .page-heading h1,
+html[data-theme="dark"] .stat-value {
+  color: var(--sf-text-primary) !important;
+}
+html[data-theme="dark"] .data-table td small,
+html[data-theme="dark"] .products-product-button small,
+html[data-theme="dark"] .supplier-name small,
+html[data-theme="dark"] .supplier-contact small,
+html[data-theme="dark"] .users-name-cell small,
+html[data-theme="dark"] .stat-detail,
+html[data-theme="dark"] .stat-label,
+html[data-theme="dark"] .settings-option span,
+html[data-theme="dark"] .settings-section-heading p,
+html[data-theme="dark"] .settings-account-role,
+html[data-theme="dark"] .users-stat-label,
+html[data-theme="dark"] .users-stat-card > small,
+html[data-theme="dark"] .users-role-grid p,
+html[data-theme="dark"] .products-footer,
+html[data-theme="dark"] .products-mini-stat span,
+html[data-theme="dark"] .products-mini-stat small,
+html[data-theme="dark"] .products-history-list small,
+html[data-theme="dark"] .products-history-heading span,
+html[data-theme="dark"] .products-detail-grid span,
+html[data-theme="dark"] .stock-empty-state,
+html[data-theme="dark"] .stock-results-footer,
+html[data-theme="dark"] .dashboard-period-summary,
+html[data-theme="dark"] .dashboard-bar-group,
+html[data-theme="dark"] .category-table-footer {
+  color: var(--sf-text-muted) !important;
+}
+
+/* Product/category/supplier/user icon tiles: muted surfaces, never glaring white. */
+html[data-theme="dark"] .category-avatar,
+html[data-theme="dark"] .category-empty-icon,
+html[data-theme="dark"] .supplier-avatar,
+html[data-theme="dark"] .users-avatar,
+html[data-theme="dark"] .users-stat-icon,
+html[data-theme="dark"] .users-role-symbol,
+html[data-theme="dark"] .settings-icon,
+html[data-theme="dark"] .stock-empty-state > svg {
+  color: var(--sf-icon-fg) !important;
+  background: var(--sf-icon-bg) !important;
+  border-color: var(--sf-border) !important;
+}
+html[data-theme="dark"] .category-avatar svg,
+html[data-theme="dark"] .category-empty-icon svg,
+html[data-theme="dark"] .supplier-avatar svg,
+html[data-theme="dark"] .users-stat-icon svg,
+html[data-theme="dark"] .users-role-symbol svg,
+html[data-theme="dark"] .settings-icon svg {
+  color: currentColor !important;
+  stroke: currentColor;
+}
+
+/* Metric values and semantic movement totals. */
+html[data-theme="dark"] .stat-value,
+html[data-theme="dark"] .users-stat-card > strong,
+html[data-theme="dark"] .products-mini-stat strong {
+  color: var(--sf-text-primary) !important;
+}
+html[data-theme="dark"] .stock-stat-entry { color: var(--sf-success) !important; }
+html[data-theme="dark"] .stock-stat-exit { color: #f0a17f !important; }
+
+/* Status chips use the same semantic palette in every table. */
+html[data-theme="dark"] .badge-success {
+  color: var(--sf-success) !important;
+  background: var(--sf-success-bg) !important;
+}
+html[data-theme="dark"] .badge-warning {
+  color: var(--sf-warning) !important;
+  background: var(--sf-warning-bg) !important;
+}
+html[data-theme="dark"] .badge-danger {
+  color: var(--sf-danger) !important;
+  background: var(--sf-danger-bg) !important;
+}
+html[data-theme="dark"] .badge-info {
+  color: var(--sf-info) !important;
+  background: var(--sf-info-bg) !important;
+}
+html[data-theme="dark"] .badge-neutral {
+  color: var(--sf-text-secondary) !important;
+  background: #344257 !important;
+}
+html[data-theme="dark"] .stock-movement-type.stock-type-entry,
+html[data-theme="dark"] .stock-stat-entry { color: var(--sf-success) !important; }
+html[data-theme="dark"] .stock-movement-type.stock-type-exit,
+html[data-theme="dark"] .stock-stat-exit { color: #f0a17f !important; }
+
+/* Inputs and controls are consistent across all modules. */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+html[data-theme="dark"] .settings-choice,
+html[data-theme="dark"] .settings-select,
+html[data-theme="dark"] .category-search,
+html[data-theme="dark"] .stock-filter-search,
+html[data-theme="dark"] .products-search,
+html[data-theme="dark"] .category-filter select,
+html[data-theme="dark"] .products-filters select {
+  color: var(--sf-text-primary);
+  border-color: var(--sf-border-strong);
+  background-color: var(--sf-surface-subtle);
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--sf-text-faint);
+  opacity: 1;
+}
+html[data-theme="dark"] .settings-choice-active {
+  color: var(--sf-info);
+  border-color: #5878a8;
+  background: var(--sf-info-bg);
+}
+html[data-theme="dark"] .button-secondary,
+html[data-theme="dark"] .global-search {
+  color: var(--sf-text-secondary);
+  border-color: var(--sf-border-strong);
+  background: var(--sf-surface-subtle);
+}
+html[data-theme="dark"] .settings-option,
+html[data-theme="dark"] .settings-section-heading {
+  border-color: var(--sf-border);
+}
+
+/* Sidebar, topbar and interactive text maintain the same contrast. */
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .topbar {
+  color: var(--sf-text-primary);
+  background: var(--sf-surface);
+  border-color: var(--sf-border);
+}
+html[data-theme="dark"] .nav-link,
+html[data-theme="dark"] .breadcrumbs,
+html[data-theme="dark"] .icon-button,
+html[data-theme="dark"] .profile-dropdown > button {
+  color: var(--sf-text-secondary);
+}
+html[data-theme="dark"] .nav-link-active {
+  color: #c5d9fa;
+  background: #2a3b54;
+}
+html[data-theme="dark"] .nav-link:hover {
+  color: var(--sf-text-primary);
+  background: var(--sf-surface-raised);
+}
+html[data-theme="dark"] .brand-copy span {
+  color: var(--sf-text-primary);
+}
+html[data-theme="dark"] .page-heading p,
+html[data-theme="dark"] .section-heading p {
+  color: var(--sf-text-muted);
+}
+html[data-theme="dark"] .sidebar-divider,
+html[data-theme="dark"] .topbar-divider {
+  background-color: var(--sf-border);
+}
+html[data-theme="dark"] .sidebar-user,
+html[data-theme="dark"] .profile-dropdown-user {
+  border-color: var(--sf-border);
+}
+html[data-theme="dark"] .app-footer {
+  color: var(--sf-text-faint);
+  border-color: var(--sf-border);
+}
+html[data-theme="dark"] .profile-dropdown > button:hover {
+  background: var(--sf-surface-raised);
+}
+html[data-theme="dark"] .user-copy strong,
+html[data-theme="dark"] .profile-dropdown-user strong {
+  color: var(--sf-text-primary);
+}
+html[data-theme="dark"] .user-copy span,
+html[data-theme="dark"] .profile-dropdown-user span {
+  color: var(--sf-text-muted);
+}
+
+/* Keep light mode aligned with the same semantic tokens without changing its palette. */
+.badge-success { color: var(--sf-success); background: var(--sf-success-bg); }
+.badge-warning { color: var(--sf-warning); background: var(--sf-warning-bg); }
+.badge-danger { color: var(--sf-danger); background: var(--sf-danger-bg); }
+.badge-info { color: var(--sf-info); background: var(--sf-info-bg); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Correção de contraste — textos das movimentações */
+html[data-theme="dark"] .breadcrumbs {
+  color: #c2cede !important;
+}
+
+html[data-theme="dark"] .breadcrumbs strong {
+  color: #e8eef7 !important;
+}
+
+html[data-theme="dark"] .breadcrumb-slash {
+  color: #8292a8 !important;
+}
+
+/* Nome e código dos produtos nas tabelas */
+html[data-theme="dark"] .product-cell strong {
+  color: #e8eef7 !important;
+}
+
+html[data-theme="dark"] .product-cell span {
+  color: #aab8ca !important;
+}
+
+/* Ícones dos produtos */
+html[data-theme="dark"] .product-thumb {
+  color: #a9c7f5 !important;
+  background: #2b3d56 !important;
+  border-color: #46566d !important;
+}
+
+/* Quantidades de estoque */
+html[data-theme="dark"] .quantity-cell {
+  color: #e8eef7 !important;
+}

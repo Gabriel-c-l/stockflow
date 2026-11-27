@@ -36,7 +36,7 @@
   color: #344054;
   background: transparent;
   font: inherit;
-  font-size: 11px;
+  font-size: calc(11px * var(--sf-text-scale, 1));
 }
 .stock-filter-search input::placeholder { color: #a2aab6; }
 .stock-movement-toolbar > select {
@@ -50,7 +50,7 @@
   color: #596678;
   background-color: #fff;
   font: inherit;
-  font-size: 10px;
+  font-size: calc(10px * var(--sf-text-scale, 1));
 }
 .stock-movement-toolbar > select:focus {
   border-color: #8eaddd;
@@ -67,7 +67,7 @@
   padding: 30px 16px;
   color: #8b96a5;
   text-align: center;
-  font-size: 10px;
+  font-size: calc(10px * var(--sf-text-scale, 1));
 }
 .stock-empty-state > svg {
   width: 45px;
@@ -80,7 +80,7 @@
 }
 .stock-empty-state strong {
   color: #3a4657;
-  font-size: 12px;
+  font-size: calc(12px * var(--sf-text-scale, 1));
   font-weight: 650;
 }
 .stock-empty-state span { max-width: 370px; line-height: 1.6; }
@@ -90,10 +90,10 @@
   align-items: center;
   border-top: 1px solid #edf0f4;
   color: #9aa3b0;
-  font-size: 9px;
+  font-size: calc(9px * var(--sf-text-scale, 1));
 }
 .stock-movement-table { margin-top: 0; }
-.stock-movement-type { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 650; }
+.stock-movement-type { display: inline-flex; align-items: center; gap: 4px; font-size: calc(9px * var(--sf-text-scale, 1)); font-weight: 650; }
 .stock-type-entry { color: #26966d; }
 .stock-type-exit { color: #d17b54; }
 .stock-notes-cell { max-width: 210px; overflow: hidden; text-overflow: ellipsis; }
@@ -115,7 +115,7 @@
   color: #344054;
   background: #fff;
   font: inherit;
-  font-size: 10px;
+  font-size: calc(10px * var(--sf-text-scale, 1));
 }
 .stock-movement-form .category-form-field select:focus,
 .stock-movement-form .category-form-field input:focus,
@@ -124,7 +124,6 @@
   box-shadow: 0 0 0 3px #3977df12;
 }
 .stock-movement-form .category-form-field textarea { resize: vertical; }
-.stock-movement-form small { color: #9aa3b0; font-size: 9px; font-weight: 400; }
 @media (max-width: 900px) {
   .stock-movement-toolbar { grid-template-columns: minmax(0, 1fr) minmax(130px, .7fr); }
   .stock-filter-search { grid-column: 1 / -1; }

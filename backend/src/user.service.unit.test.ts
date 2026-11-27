@@ -13,7 +13,7 @@ import { createUser, listUsers, updateUser } from "./services/user.service";
 
 const repo = vi.mocked(repository);
 const existing = (overrides: Partial<{ id: string; name: string; email: string; role: "ADMIN" | "MANAGER" | "OPERATOR"; isActive: boolean }> = {}) => ({
-  id: "user-2", name: "Existing User", email: "existing@example.com", role: "OPERATOR" as const, isActive: true, passwordHash: "hash", createdAt: new Date(), updatedAt: new Date(), ...overrides,
+  id: "user-2", name: "Existing User", email: "existing@example.com", role: "OPERATOR" as const, language: "en", isActive: true, passwordHash: "hash", createdAt: new Date(), updatedAt: new Date(), ...overrides,
 });
 const createInput = { name: "New User", email: "new@example.com", password: "VeryStrongPassword123!", role: "OPERATOR" as const };
 

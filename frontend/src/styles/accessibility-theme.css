@@ -1,0 +1,96 @@
+/* Accessibility text sizing and dark theme contrast refinements. */
+:root { --sf-text-scale: 1; }
+html[data-font-scale="large"] { --sf-text-scale: 1.14; }
+html[data-font-scale="extra"] { --sf-text-scale: 1.28; }
+
+/* Dark theme: readable text and toned-down icon surfaces. */
+html[data-theme="dark"] .page-content,
+html[data-theme="dark"] .page-stack,
+html[data-theme="dark"] .category-management-card,
+html[data-theme="dark"] .products-card,
+html[data-theme="dark"] .stock-movements-card,
+html[data-theme="dark"] .users-management-card,
+html[data-theme="dark"] .users-roles-card,
+html[data-theme="dark"] .settings-card {
+  color: #e5edf8;
+}
+html[data-theme="dark"] .products-product-button strong,
+html[data-theme="dark"] .products-quantity,
+html[data-theme="dark"] .products-price-cell,
+html[data-theme="dark"] .supplier-name strong,
+html[data-theme="dark"] .supplier-contact strong,
+html[data-theme="dark"] .users-name-cell strong,
+html[data-theme="dark"] .users-role-grid strong,
+html[data-theme="dark"] .users-access-denied strong,
+html[data-theme="dark"] .products-history-heading strong,
+html[data-theme="dark"] .products-detail-grid strong,
+html[data-theme="dark"] .dashboard-period-summary strong,
+html[data-theme="dark"] .settings-account-role strong,
+html[data-theme="dark"] .stock-empty-state strong {
+  color: #e6edf7 !important;
+}
+html[data-theme="dark"] .products-product-button small,
+html[data-theme="dark"] .products-mini-stat span,
+html[data-theme="dark"] .products-mini-stat small,
+html[data-theme="dark"] .products-footer,
+html[data-theme="dark"] .products-history-list small,
+html[data-theme="dark"] .products-history-heading span,
+html[data-theme="dark"] .supplier-name small,
+html[data-theme="dark"] .supplier-contact small,
+html[data-theme="dark"] .users-name-cell small,
+html[data-theme="dark"] .users-stat-label,
+html[data-theme="dark"] .users-stat-card > small,
+html[data-theme="dark"] .users-role-grid p,
+html[data-theme="dark"] .users-current-note,
+html[data-theme="dark"] .settings-section-heading p,
+html[data-theme="dark"] .settings-option span,
+html[data-theme="dark"] .settings-account-role,
+html[data-theme="dark"] .stock-empty-state,
+html[data-theme="dark"] .stock-results-footer,
+html[data-theme="dark"] .dashboard-period-summary,
+html[data-theme="dark"] .dashboard-bar-group {
+  color: #b5c1d2 !important;
+}
+html[data-theme="dark"] .products-detail-grid > div,
+html[data-theme="dark"] .users-role-grid > div {
+  border-color: #3b485b;
+  background: #253246;
+}
+html[data-theme="dark"] .products-detail-grid span { color: #b5c1d2; }
+html[data-theme="dark"] .category-search,
+html[data-theme="dark"] .stock-filter-search,
+html[data-theme="dark"] .products-search,
+html[data-theme="dark"] .category-filter select,
+html[data-theme="dark"] .products-filters select,
+html[data-theme="dark"] .products-form-grid input,
+html[data-theme="dark"] .products-form-grid select,
+html[data-theme="dark"] .products-form-grid textarea,
+html[data-theme="dark"] .supplier-form-grid input,
+html[data-theme="dark"] .supplier-form-grid textarea,
+html[data-theme="dark"] .stock-movement-form input,
+html[data-theme="dark"] .stock-movement-form select,
+html[data-theme="dark"] .stock-movement-form textarea {
+  color: #e4ebf5;
+  border-color: #46546a;
+  background-color: #263448;
+}
+html[data-theme="dark"] .category-form-field,
+html[data-theme="dark"] .category-form-field label,
+html[data-theme="dark"] .category-form-field small,
+html[data-theme="dark"] .stock-movement-form small { color: #b5c1d2; }
+html[data-theme="dark"] .category-alert-error { color: #ffc2c2; border-color: #75464b; background: #3b292f; }
+html[data-theme="dark"] .category-alert-warning { color: #f4d79a; border-color: #6c5835; background: #3a3225; }
+html[data-theme="dark"] .category-alert-success { color: #a8e5c7; border-color: #315f4c; background: #203b32; }
+html[data-theme="dark"] .button-ghost { color: #b8cbed; }
+html[data-theme="dark"] .button-ghost:hover { background: #2d405b; }
+html[data-theme="dark"] .users-you-label { color: #c2d7ff; background: #304766; }
+
+/* Keep icon strokes tied to their semantic text color instead of forcing white. */
+html[data-theme="dark"] .nav-link svg,
+html[data-theme="dark"] .settings-icon svg,
+html[data-theme="dark"] .settings-choice svg,
+html[data-theme="dark"] .category-search svg,
+html[data-theme="dark"] .stock-filter-search svg {
+  color: currentColor;
+  stroke: currentColor;
+}

@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 import { ZodError } from "zod";
 import { loginSchema } from "../types/auth";
+import * as authRepository from "../repositories/auth.repository";
+import { z } from "zod";
 import {
   AuthServiceError,
   login,
@@ -59,4 +61,29 @@ export const meController = (
   }
 
   return response.status(200).json({ user: request.authUser });
+};
+
+const languagePreferenceSchema = z.object({
+  language: z.enum(["pt-BR", "en"]),
+}).strict();
+
+export const updateLanguagePreferenceController = async (
+  request: Request,
+  response: Response,
+): Promise<Response> => {
+  if (!request.authUser) {
+    return response.status(401).json({ error: "Authentication required." });
+  }
+
+  const parsed = languagePreferenceSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return response.status(400).json({ error: "Invalid language preference." });
+  }
+
+  const preference = await authRepository.updateUserLanguage(
+    request.authUser.id,
+    parsed.data.language,
+  );
+
+  return response.status(200).json({ language: preference.language });
 };

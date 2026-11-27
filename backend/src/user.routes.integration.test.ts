@@ -12,7 +12,7 @@ import { createApp } from "./server";
 const authByHeader: RequestHandler = (req, _res, next) => {
   const role = req.header("x-test-role");
   if (role === "ADMIN" || role === "MANAGER" || role === "OPERATOR") {
-    req.authUser = { id: "test-user", name: "Test User", email: "test@example.com", role, isActive: true, createdAt: new Date() };
+    req.authUser = { id: "test-user", name: "Test User", email: "test@example.com", role, language: "en", isActive: true, createdAt: new Date() };
   }
   next();
 };

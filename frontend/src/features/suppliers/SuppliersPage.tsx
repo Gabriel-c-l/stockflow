@@ -1,3 +1,4 @@
+import { formatDate } from '../../lib/format';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -7,11 +8,12 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { ApiError } from '../../lib/api';
 import { stockflowApi } from '../../lib/stockflow-api';
 import type { Supplier } from '../../lib/types';
+import { translate, useI18n, UserText, TranslateTree } from '../../lib/i18n';
 import { blockNonNumericKey, digitsOnly } from '../../lib/numeric-input';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 const errorMessage = (error: unknown) => error instanceof ApiError ? error.message : 'Não foi possível concluir a operação. Tente novamente.';
-const dateLabel = (value: string) => new Intl.DateTimeFormat('pt-BR').format(new Date(value));
+const dateLabel = (value: string) => formatDate(value);
 const onlyDigits = digitsOnly;
 const formatDocument = (value: string) => {
   const digits = onlyDigits(value, 14);
@@ -26,7 +28,8 @@ const formatPhone = (value: string) => {
   return digits;
 };
 
-export function SuppliersPage() {
+export function SuppliersPage({ canManage = true }: { canManage?: boolean }) {
+  const { language } = useI18n();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [status, setStatus] = useState<StatusFilter>('active');
   const [search, setSearch] = useState('');
@@ -86,15 +89,15 @@ export function SuppliersPage() {
   };
 
   const deactivate = async (supplier: Supplier) => {
-    if (!window.confirm(`Deseja desativar o fornecedor "${supplier.name}"?`)) return;
+    if (!window.confirm(`${translate('Deseja desativar o fornecedor', language)} "${supplier.name}"?`)) return;
     setNotice('');
     try { await stockflowApi.deactivateSupplier(supplier.id); setNotice('Fornecedor desativado com sucesso.'); await load(); }
     catch (err) { setError(errorMessage(err)); }
   };
 
-  return <div className="page-stack">
-    <PageHeader eyebrow="INVENTÁRIO / RELACIONAMENTOS" title="Fornecedores" description="Mantenha os dados dos fornecedores organizados para vincular recebimentos e acompanhar a origem das entradas."
-      actions={<Button leadingIcon={<Icon name="plus" size={16} />} onClick={openCreate}>Novo fornecedor</Button>} />
+  return <TranslateTree><div className="page-stack">
+    <PageHeader eyebrow="INVENTÁRIO / RELACIONAMENTOS" title="Fornecedores" description={canManage ? "Mantenha os dados dos fornecedores organizados para vincular recebimentos e acompanhar a origem das entradas." : "Consulte os fornecedores vinculados às entradas do estoque."}
+      actions={canManage ? <Button leadingIcon={<Icon name="plus" size={16} />} onClick={openCreate}>Novo fornecedor</Button> : undefined} />
     {notice && <div className="category-alert category-alert-success" role="status">{notice}</div>}
     <Card className="category-management-card supplier-management-card">
       <div className="category-toolbar">
@@ -103,18 +106,18 @@ export function SuppliersPage() {
       </div>
       {loading ? <div className="category-state"><span className="loading-spinner"/>Carregando fornecedores...</div>
         : error ? <div className="category-state category-state-error"><Icon name="alert" size={24}/><strong>Não foi possível carregar os fornecedores</strong><span>{error}</span><Button variant="secondary" onClick={() => void load()}>Tentar novamente</Button></div>
-        : visible.length === 0 ? <div className="category-state"><div className="category-empty-icon"><Icon name="truck" size={23}/></div><strong>{search ? 'Nenhum fornecedor encontrado' : 'Ainda não há fornecedores'}</strong><span>{search ? 'Tente buscar por outro termo.' : 'Cadastre fornecedores para registrar a origem das entradas de estoque.'}</span>{!search && status !== 'inactive' && <Button leadingIcon={<Icon name="plus" size={15}/>} onClick={openCreate}>Cadastrar fornecedor</Button>}</div>
-        : <div className="table-wrap category-table-wrap"><table className="data-table category-table supplier-table"><thead><tr><th>FORNECEDOR</th><th>CPF / CNPJ</th><th>CONTATO</th><th>STATUS</th><th>CADASTRADO EM</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>
+        : visible.length === 0 ? <div className="category-state"><div className="category-empty-icon"><Icon name="truck" size={23}/></div><strong>{search ? 'Nenhum fornecedor encontrado' : 'Ainda não há fornecedores'}</strong><span>{search ? 'Tente buscar por outro termo.' : 'Cadastre fornecedores para registrar a origem das entradas de estoque.'}</span>{canManage && !search && status !== 'inactive' && <Button leadingIcon={<Icon name="plus" size={15}/>} onClick={openCreate}>Cadastrar fornecedor</Button>}</div>
+        : <div className="table-wrap category-table-wrap"><table className="data-table category-table supplier-table"><thead><tr><th>FORNECEDOR</th><th>CPF / CNPJ</th><th>CONTATO</th><th>STATUS</th><th>CADASTRADO EM</th>{canManage && <th><span className="sr-only">Ações</span></th>}</tr></thead><tbody>
           {visible.map((supplier) => <tr key={supplier.id}>
-            <td><div className="category-name-cell"><span className="category-avatar supplier-avatar"><Icon name="truck" size={16}/></span><div className="supplier-name"><strong>{supplier.name}</strong><small>{supplier.address || 'Endereço não informado'}</small></div></div></td>
-            <td>{supplier.taxId || '—'}</td><td><div className="supplier-contact"><strong>{supplier.email || '—'}</strong><small>{supplier.phone || 'Telefone não informado'}</small></div></td>
+            <td><div className="category-name-cell"><span className="category-avatar supplier-avatar"><Icon name="truck" size={16}/></span><div className="supplier-name"><UserText as="strong">{supplier.name}</UserText><small>{supplier.address ? <UserText>{supplier.address}</UserText> : 'Endereço não informado'}</small></div></div></td>
+            <td><UserText>{supplier.taxId || '—'}</UserText></td><td><div className="supplier-contact"><UserText as="strong">{supplier.email || '—'}</UserText><small>{supplier.phone ? <UserText>{supplier.phone}</UserText> : 'Telefone não informado'}</small></div></td>
             <td><Badge tone={supplier.isActive ? 'success' : 'neutral'}>{supplier.isActive ? 'Ativo' : 'Inativo'}</Badge></td><td>{dateLabel(supplier.createdAt)}</td>
-            <td><div className="category-row-actions"><Button size="sm" variant="secondary" onClick={() => openEdit(supplier)}>Editar</Button>{supplier.isActive && <Button size="sm" variant="ghost" onClick={() => void deactivate(supplier)}>Desativar</Button>}</div></td>
+            {canManage && <td><div className="category-row-actions"><Button size="sm" variant="secondary" onClick={() => openEdit(supplier)}>Editar</Button>{supplier.isActive && <Button size="sm" variant="ghost" onClick={() => void deactivate(supplier)}>Desativar</Button>}</div></td>}
           </tr>)}
         </tbody></table></div>}
       {!loading && !error && <div className="category-table-footer"><span>{visible.length} {visible.length === 1 ? 'fornecedor' : 'fornecedores'}</span><Button size="sm" variant="ghost" onClick={() => void load()} leadingIcon={<Icon name="activity" size={14}/>}>Atualizar</Button></div>}
     </Card>
-    {modalOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
+    {canManage && modalOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
       <section className="category-modal supplier-modal" role="dialog" aria-modal="true" aria-labelledby="supplier-form-title">
         <div className="category-modal-header"><div><span className="page-eyebrow">CADASTRO DE PARCEIROS</span><h2 id="supplier-form-title">{editing ? 'Editar fornecedor' : 'Novo fornecedor'}</h2><p>Informe os dados de identificação e contato.</p></div><button className="icon-button" type="button" onClick={close} disabled={saving} aria-label="Fechar">×</button></div>
         <form onSubmit={(event) => void submit(event)}>
@@ -131,5 +134,5 @@ export function SuppliersPage() {
         </form>
       </section>
     </div>}
-  </div>;
+  </div></TranslateTree>;
 }

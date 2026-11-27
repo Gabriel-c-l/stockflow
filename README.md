@@ -19,8 +19,7 @@ The currently implemented API provides:
 - Stock entries and exits with `POST /stock-movements`.
 - Product movement history with `GET /products/:id/movements`.
 
-The `frontend/` directory exists only as an initial project structure; no
-frontend functionality is implemented in the current delivery.
+The `frontend/` directory contains the React application, including the dashboard, inventory, categories, stock movements, suppliers, users and settings screens. The interface supports English and Brazilian Portuguese with account-level language preference.
 
 ### Business rules
 
@@ -81,7 +80,8 @@ reports and other entities are not implemented.
 | GET | `/products/:id/movements` | Get a product movement history. |
 | POST | `/auth/login` | Authenticate a user and create an HttpOnly session cookie. |
 | POST | `/auth/logout` | Revoke the current session and clear the cookie. |
-| GET | `/auth/me` | Return the safe profile of the authenticated user. |
+| GET | `/auth/me` | Return the safe profile of the authenticated user, including language preference. |
+| PATCH | `/auth/preferences` | Update the authenticated user language (`en` or `pt-BR`). |
 
 Authentication is implemented by a server-side session stored in PostgreSQL.
 The database stores only a SHA-256 hash of the random session token. Passwords
@@ -299,3 +299,14 @@ plan as the scope evolves.
 - **Subject:** Software Quality Assurance
 - **Project:** A3 — Inventory Management System
 - **Author:** Gabriel Corrêa Lopes
+
+## Language preference
+
+The interface defaults to English. Authenticated users can switch between English (`en`) and Brazilian Portuguese (`pt-BR`) in Settings. The selected language is stored on the `User` record and cached locally for faster initial rendering. Apply the migrations before running the updated API:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+Only interface copy and standardized system labels are localized. Product names, category names, supplier details, notes and other user-entered database content are displayed as originally saved.

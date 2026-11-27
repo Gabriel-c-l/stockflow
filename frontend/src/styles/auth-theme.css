@@ -1,0 +1,173 @@
+/* Authentication screen theme. The login page is shown before a user session
+   exists, so it needs its own complete dark palette instead of inheriting the
+   mixed application form-control styles. */
+html[data-theme="dark"] .auth-page {
+  background: #101827;
+}
+
+html[data-theme="dark"] .auth-brand-panel {
+  background: linear-gradient(145deg, #0c1526 0%, #111e33 100%);
+}
+
+html[data-theme="dark"] .auth-brand-visual {
+  background: #192942;
+  box-shadow: inset 0 0 0 1px #ffffff08;
+}
+
+html[data-theme="dark"] .auth-status-card {
+  color: #e8eef7;
+  border: 1px solid #34465f;
+  background: #202d41;
+  box-shadow: 0 8px 24px #050b1560;
+}
+
+html[data-theme="dark"] .auth-status-card span {
+  color: #aab8ca;
+}
+
+html[data-theme="dark"] .auth-status-card strong {
+  color: #f0f4fa;
+}
+
+html[data-theme="dark"] .auth-status-card .auth-live-pill {
+  color: #73ddb0;
+  background: #173d35;
+}
+
+html[data-theme="dark"] .auth-form-panel {
+  color: #e8eef7;
+  border-left: 1px solid #27364b;
+  background: radial-gradient(ellipse at 50% 0%, #1c2a3e 0%, #151f2e 54%, #111a28 100%);
+}
+
+html[data-theme="dark"] .auth-language-control {
+  color: #aebbd0;
+}
+
+html[data-theme="dark"] .auth-language-control select {
+  color: #e8eef7;
+  border-color: #3b4b62;
+  background: #202d41;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .auth-theme-toggle {
+  color: #f4c96b;
+  border-color: #3b4b62;
+  background: #202d41;
+}
+
+html[data-theme="dark"] .auth-theme-toggle:hover {
+  color: #ffe3a0;
+  border-color: #657b9a;
+  background: #293b54;
+}
+
+html[data-theme="dark"] .auth-form-heading h2 {
+  color: #f1f5fb;
+}
+
+html[data-theme="dark"] .auth-form-heading p {
+  color: #a8b7cc;
+}
+
+html[data-theme="dark"] .auth-field {
+  color: #b7c5d8;
+}
+
+html[data-theme="dark"] .auth-field input {
+  color: #edf3fb;
+  border-color: #3b4b62;
+  background: #202d41;
+  box-shadow: inset 0 1px 2px #050b1525;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .auth-field input::placeholder {
+  color: #91a2ba;
+}
+
+html[data-theme="dark"] .auth-field input:focus {
+  border-color: #7098f3;
+  box-shadow: 0 0 0 3px #4e83f033;
+}
+
+html[data-theme="dark"] .auth-password-toggle {
+  color: #9eafc7;
+}
+
+html[data-theme="dark"] .auth-password-toggle:hover {
+  color: #e7effb;
+}
+
+html[data-theme="dark"] .auth-options button,
+html[data-theme="dark"] .auth-account-note button {
+  color: #82a9ff;
+}
+
+html[data-theme="dark"] .auth-submit {
+  background: #3472f5;
+  box-shadow: 0 3px 12px #0a2e8050;
+}
+
+html[data-theme="dark"] .auth-submit:hover:not(:disabled) {
+  background: #4a83ff;
+}
+
+html[data-theme="dark"] .auth-divider {
+  background: #2d3b50;
+}
+
+html[data-theme="dark"] .auth-account-note span,
+html[data-theme="dark"] .auth-legal {
+  color: #9cabc0;
+}
+
+html[data-theme="dark"] .auth-error {
+  color: #ffc4c0;
+  border-color: #754341;
+  background: #3b252b;
+}
+
+html[data-theme="dark"] .auth-help-message {
+  color: #c5d7f4;
+  border-color: #3b5275;
+  background: #202f46;
+}
+
+html[data-theme="dark"] .auth-loading {
+  color: #a8b7cc;
+  background: #151f2e;
+}
+
+@media (max-width: 760px) {
+  html[data-theme="dark"] .auth-form-panel {
+    border-left: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .auth-top-controls {
+    gap: 8px;
+  }
+
+  .auth-language-control {
+    gap: 6px;
+  }
+
+  .auth-language-control select {
+    max-width: 156px;
+    padding-right: 6px;
+    padding-left: 7px;
+  }
+
+  .auth-theme-toggle {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+  }
+
+  .auth-theme-toggle span {
+    display: none;
+  }
+}

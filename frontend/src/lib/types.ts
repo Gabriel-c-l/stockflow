@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  language?: 'pt-BR' | 'en';
   isActive: boolean;
   createdAt: string;
 }
@@ -138,3 +139,6 @@ export interface DashboardSummary {
   }>;
   periodStart: string;
 }
+
+export interface CreateUserInput { name: string; email: string; password: string; role: UserRole; }
+export interface UpdateUserInput { name?: string; email?: string; role?: UserRole; isActive?: boolean; }

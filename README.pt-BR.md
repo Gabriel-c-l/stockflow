@@ -311,3 +311,14 @@ O cadastro agora prevê categoria opcional, unidade de medida e localização f�
 Categorias possuem nome único, descrição e desativação lógica. Uma categoria não pode ser desativada enquanto houver produtos ativos vinculados a ela. A quantidade em estoque continua sendo alterada somente por movimentações de entrada e saída.
 
 Consulte `NEXT-STEP-CATEGORIES.md` para os endpoints e os passos de migração.
+
+## Preferência de idioma
+
+A interface usa inglês como idioma inicial. Usuários autenticados podem alternar entre inglês (`en`) e português do Brasil (`pt-BR`) em Configurações. A preferência é armazenada no registro `User` e mantida em cache local para acelerar a exibição inicial. Aplique as migrações antes de iniciar a API atualizada:
+
+```bash
+cd backend
+npx prisma migrate deploy
+```
+
+Somente os textos da interface e os rótulos padronizados do sistema são localizados. Nomes de produtos e categorias, dados de fornecedores, observações e outros conteúdos cadastrados pelos usuários permanecem como foram salvos.

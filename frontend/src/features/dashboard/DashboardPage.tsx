@@ -1,3 +1,4 @@
+import { formatDateTime, formatWeekday } from '../../lib/format';
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -5,13 +6,14 @@ import { Button } from '../../components/ui/Button';
 import { StatCard } from '../../components/ui/StatCard';
 import { Card } from '../../components/ui/Card';
 import { SectionHeading } from '../../components/ui/SectionHeading';
+import { UserText, TranslateTree } from '../../lib/i18n';
 import { Badge } from '../../components/ui/Badge';
 import { stockflowApi } from '../../lib/stockflow-api';
 import type { DashboardSummary } from '../../lib/types';
 
-const number = (value: number) => new Intl.NumberFormat('pt-BR').format(value);
-const dateLabel = (value: string) => new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
-const dayLabel = (value: string) => new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(new Date(`${value}T12:00:00Z`)).replace('.', '');
+const number = (value: number) => { let locale = 'pt-BR'; try { locale = JSON.parse(localStorage.getItem('stockflow.preferences') || '{}').language === 'en' ? 'en-US' : 'pt-BR'; } catch { /* use default locale */ } return new Intl.NumberFormat(locale).format(value); };
+const dateLabel = (value: string) => formatDateTime(value);
+const dayLabel = (value: string) => formatWeekday(value);
 const unitLabels: Record<string, string> = { UN: 'un', CX: 'cx', PCT: 'pct', KG: 'kg', G: 'g', L: 'L', ML: 'ml', M: 'm', CM: 'cm' };
 
 export function DashboardPage() {
@@ -37,7 +39,7 @@ export function DashboardPage() {
     return `conic-gradient(${stops.join(', ')})`;
   })() : 'conic-gradient(#e9edf2 0% 100%)';
 
-  return <div className="page-stack dashboard-live">
+  return <TranslateTree><div className="page-stack dashboard-live">
     <PageHeader eyebrow="WORKSPACE / VISÃO GERAL" title="Dashboard" description="Acompanhe o que está acontecendo no seu estoque." actions={<Button variant="secondary" onClick={() => void load()} disabled={loading} leadingIcon={<Icon name="activity" size={15} />}>{loading ? 'Atualizando...' : 'Atualizar dados'}</Button>} />
     {error && <div className="category-alert category-alert-error" role="alert">{error} <button type="button" onClick={() => void load()}>Tentar novamente</button></div>}
     <section className="stats-grid" aria-label="Resumo do estoque">
@@ -67,7 +69,7 @@ export function DashboardPage() {
         <div className="category-content">
           <div className="donut-chart" style={{ background: categoryGradient }}><div><strong>{number(data?.totalProducts ?? 0)}</strong><span>Produtos</span></div></div>
           <div className="category-legend dashboard-category-legend">
-            {loading && !data ? <span>Carregando categorias...</span> : <>{data?.categoryBreakdown.filter((item) => item.productCount > 0).map((item, index) => <div className="category-row" key={item.id}><span className="category-dot" style={{ background: categoryColors[index % categoryColors.length] }} /><span>{item.name}</span><strong>{categoryTotal ? `${Math.round(item.productCount / categoryTotal * 100)}%` : '0%'}</strong></div>)}
+            {loading && !data ? <span>Carregando categorias...</span> : <>{data?.categoryBreakdown.filter((item) => item.productCount > 0).map((item, index) => <div className="category-row" key={item.id}><span className="category-dot" style={{ background: categoryColors[index % categoryColors.length] }} /><UserText>{item.name}</UserText><strong>{categoryTotal ? `${Math.round(item.productCount / categoryTotal * 100)}%` : '0%'}</strong></div>)}
               {(data?.uncategorizedProducts ?? 0) > 0 && <div className="category-row"><span className="category-dot" style={{ background: '#9aa6b2' }} /><span>Sem categoria</span><strong>{categoryTotal ? `${Math.round((data?.uncategorizedProducts ?? 0) / categoryTotal * 100)}%` : '0%'}</strong></div>}
               {categoryTotal === 0 && <span>Nenhum produto cadastrado.</span>}</>}
           </div>
@@ -78,9 +80,9 @@ export function DashboardPage() {
     <Card className="movements-card">
       <SectionHeading title="Movimentações recentes" description="Últimas operações registradas no estoque" action={<Button variant="ghost" size="sm" onClick={() => { window.location.assign('/stock-movements'); }} trailingIcon={<Icon name="arrow-right" size={15} />}>Ver todas</Button>} />
       {loading && !data ? <div className="dashboard-table-empty">Carregando histórico...</div> : data?.recentMovements.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>PRODUTO</th><th>TIPO</th><th>QUANTIDADE</th><th>DATA</th><th>RESPONSÁVEL</th><th>STATUS</th></tr></thead><tbody>
-        {data.recentMovements.map((movement) => <tr key={movement.id}><td><div className="product-cell"><div className="product-thumb"><Icon name="package" size={16} /></div><div><strong>{movement.product.name}</strong><span>{movement.product.sku}</span></div></div></td><td><span className={movement.type === 'ENTRY' ? 'movement-in' : 'movement-out'}>{movement.type === 'ENTRY' ? 'Entrada' : 'Saída'}</span></td><td className="quantity-cell">{movement.type === 'ENTRY' ? '+' : '−'} {number(movement.quantity)} {unitLabels[movement.product.unit] ?? movement.product.unit}</td><td>{dateLabel(movement.createdAt)}</td><td>{movement.performedBy?.name ?? '—'}</td><td><Badge tone="success">Concluída</Badge></td></tr>)}
+        {data.recentMovements.map((movement) => <tr key={movement.id}><td><div className="product-cell"><div className="product-thumb"><Icon name="package" size={16} /></div><div><UserText as="strong">{movement.product.name}</UserText><UserText as="span">{movement.product.sku}</UserText></div></div></td><td><span className={movement.type === 'ENTRY' ? 'movement-in' : 'movement-out'}>{movement.type === 'ENTRY' ? 'Entrada' : 'Saída'}</span></td><td className="quantity-cell">{movement.type === 'ENTRY' ? '+' : '−'} {number(movement.quantity)} {unitLabels[movement.product.unit] ?? movement.product.unit}</td><td>{dateLabel(movement.createdAt)}</td><td><UserText>{movement.performedBy?.name ?? '—'}</UserText></td><td><Badge tone="success">Concluída</Badge></td></tr>)}
       </tbody></table></div> : <div className="dashboard-table-empty">Nenhuma movimentação registrada ainda.</div>}
     </Card>
     <div className="prototype-note"><Icon name="activity" size={14} /> Dados atualizados diretamente da API do StockFlow. O resumo de movimentações considera os últimos 7 dias.</div>
-  </div>;
+  </div></TranslateTree>;
 }

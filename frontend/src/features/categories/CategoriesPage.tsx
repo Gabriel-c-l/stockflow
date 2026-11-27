@@ -1,3 +1,4 @@
+import { formatDate } from '../../lib/format';
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -7,6 +8,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { ApiError } from '../../lib/api';
 import { stockflowApi } from '../../lib/stockflow-api';
 import type { Category } from '../../lib/types';
+import { translate, useI18n, UserText, TranslateTree } from '../../lib/i18n';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 
@@ -15,7 +17,8 @@ const getErrorMessage = (error: unknown) => {
   return 'Não foi possível concluir a operação. Tente novamente.';
 };
 
-export function CategoriesPage() {
+export function CategoriesPage({ canManage = true }: { canManage?: boolean }) {
+  const { language } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [status, setStatus] = useState<StatusFilter>('active');
   const [search, setSearch] = useState('');
@@ -102,7 +105,7 @@ export function CategoriesPage() {
   };
 
   const handleDeactivate = async (category: Category) => {
-    const confirmed = window.confirm(`Deseja desativar a categoria "${category.name}"?`);
+    const confirmed = window.confirm(`${translate('Deseja desativar a categoria', language)} "${category.name}"?`);
     if (!confirmed) return;
     setActionError('');
     setNotice('');
@@ -116,12 +119,13 @@ export function CategoriesPage() {
   };
 
   return (
+    <TranslateTree>
     <div className="page-stack">
       <PageHeader
         eyebrow="INVENTÁRIO / ORGANIZAÇÃO"
         title="Categorias"
-        description="Organize seus produtos em categorias para facilitar a consulta e o controle do estoque."
-        actions={<Button leadingIcon={<Icon name="plus" size={16} />} onClick={openCreate}>Nova categoria</Button>}
+        description={canManage ? "Organize seus produtos em categorias para facilitar a consulta e o controle do estoque." : "Consulte as categorias utilizadas para organizar os produtos do estoque."}
+        actions={canManage ? <Button leadingIcon={<Icon name="plus" size={16} />} onClick={openCreate}>Nova categoria</Button> : undefined}
       />
 
       {notice && <div className="category-alert category-alert-success" role="status">{notice}</div>}
@@ -157,33 +161,33 @@ export function CategoriesPage() {
             <div className="category-empty-icon"><Icon name="boxes" size={23} /></div>
             <strong>{search ? 'Nenhuma categoria encontrada' : 'Ainda não há categorias aqui'}</strong>
             <span>{search ? 'Tente buscar por outro termo.' : 'Crie sua primeira categoria para começar a organizar os produtos.'}</span>
-            {!search && status !== 'inactive' && <Button leadingIcon={<Icon name="plus" size={15} />} onClick={openCreate}>Criar categoria</Button>}
+            {canManage && !search && status !== 'inactive' && <Button leadingIcon={<Icon name="plus" size={15} />} onClick={openCreate}>Criar categoria</Button>}
           </div>
         ) : (
           <div className="table-wrap category-table-wrap">
             <table className="data-table category-table">
-              <thead><tr><th>CATEGORIA</th><th>DESCRIÇÃO</th><th>STATUS</th><th>CRIADA EM</th><th><span className="sr-only">Ações</span></th></tr></thead>
+              <thead><tr><th>CATEGORIA</th><th>DESCRIÇÃO</th><th>STATUS</th><th>CRIADA EM</th>{canManage && <th><span className="sr-only">Ações</span></th>}</tr></thead>
               <tbody>
                 {visibleCategories.map((category) => (
                   <tr key={category.id}>
-                    <td><div className="category-name-cell"><span className="category-avatar"><Icon name="boxes" size={16} /></span><strong>{category.name}</strong></div></td>
-                    <td className="category-description">{category.description || '—'}</td>
+                    <td><div className="category-name-cell"><span className="category-avatar"><Icon name="boxes" size={16} /></span><UserText as="strong">{category.name}</UserText></div></td>
+                    <td className="category-description"><UserText>{category.description || '—'}</UserText></td>
                     <td><Badge tone={category.isActive ? 'success' : 'neutral'}>{category.isActive ? 'Ativa' : 'Inativa'}</Badge></td>
-                    <td>{new Intl.DateTimeFormat('pt-BR').format(new Date(category.createdAt))}</td>
-                    <td><div className="category-row-actions">
+                    <td>{formatDate(category.createdAt)}</td>
+                    {canManage && <td><div className="category-row-actions">
                       <Button size="sm" variant="secondary" onClick={() => openEdit(category)}>Editar</Button>
                       {category.isActive && <Button size="sm" variant="ghost" onClick={() => void handleDeactivate(category)}>Desativar</Button>}
-                    </div></td>
+                    </div></td>}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        {!loading && !error && <div className="category-table-footer"><span>{visibleCategories.length} {visibleCategories.length === 1 ? 'categoria' : 'categorias'}</span><Button size="sm" variant="ghost" onClick={() => void loadCategories()} leadingIcon={<Icon name="activity" size={14} />}>Atualizar</Button></div>}
+        {!loading && !error && <div className="category-table-footer"><span>{language === 'en' ? `${visibleCategories.length} ${visibleCategories.length === 1 ? 'category' : 'categories'}` : `${visibleCategories.length} ${visibleCategories.length === 1 ? 'categoria' : 'categorias'}`}</span><Button size="sm" variant="ghost" onClick={() => void loadCategories()} leadingIcon={<Icon name="activity" size={14} />}>Atualizar</Button></div>}
       </Card>
 
-      {formOpen && (
+      {canManage && formOpen && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeForm(); }}>
           <section className="category-modal" role="dialog" aria-modal="true" aria-labelledby="category-form-title">
             <div className="category-modal-header">
@@ -209,5 +213,6 @@ export function CategoriesPage() {
         </div>
       )}
     </div>
+    </TranslateTree>
   );
 }

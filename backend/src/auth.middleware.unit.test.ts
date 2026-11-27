@@ -5,6 +5,7 @@ import { authenticate } from "./middlewares/authenticate";
 
 vi.mock("./repositories/auth.repository", () => ({
   findActiveSession: vi.fn(),
+  findUserLanguage: vi.fn().mockResolvedValue("en"),
 }));
 
 const mockedRepository = vi.mocked(authRepository);
@@ -45,6 +46,7 @@ describe("Authenticate middleware unit tests", () => {
         email: "inactive@example.invalid",
         passwordHash: "secret",
         role: "OPERATOR",
+        language: "en",
         isActive: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -77,6 +79,7 @@ describe("Authenticate middleware unit tests", () => {
         email: "user@example.invalid",
         passwordHash: "secret",
         role: "OPERATOR",
+        language: "en",
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),

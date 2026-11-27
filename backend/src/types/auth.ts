@@ -14,6 +14,7 @@ export type AuthenticatedUser = {
   name: string;
   email: string;
   role: "ADMIN" | "MANAGER" | "OPERATOR";
+  language: "pt-BR" | "en";
   isActive: boolean;
   createdAt: Date;
 };

@@ -12,6 +12,8 @@ vi.mock("./repositories/auth.repository", () => ({
   findActiveSession: vi.fn(),
   revokeSession: vi.fn(),
   revokeSessionByTokenHash: vi.fn(),
+  findUserLanguage: vi.fn(),
+  updateUserLanguage: vi.fn(),
 }));
 
 vi.mock("./utils/password", () => ({
@@ -31,6 +33,7 @@ const user = {
   email: "user@example.invalid",
   passwordHash: "hash",
   role: "OPERATOR" as const,
+  language: "en" as const,
   isActive: true,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -40,6 +43,7 @@ describe("Authentication HTTP integration tests", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     resetLoginRateLimitForTests();
+    mockedRepository.findUserLanguage.mockResolvedValue("en");
   });
 
   it("logs in and sets an HttpOnly session cookie", async () => {
@@ -107,6 +111,29 @@ describe("Authentication HTTP integration tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.user).not.toHaveProperty("passwordHash");
+  });
+
+  it("updates the language preference for the authenticated account", async () => {
+    mockedRepository.findActiveSession.mockResolvedValue({
+      id: "00000000-0000-0000-0000-000000000002",
+      userId: user.id,
+      tokenHash: "hash",
+      expiresAt: new Date(Date.now() + 60_000),
+      revokedAt: null,
+      createdAt: new Date(),
+      user,
+    });
+    mockedRepository.updateUserLanguage.mockResolvedValue({ language: "pt-BR" });
+
+    const response = await request(app)
+      .patch("/auth/preferences")
+      .set("Origin", "http://localhost:5173")
+      .set("Cookie", "stockflow_session=valid-token")
+      .send({ language: "pt-BR" });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ language: "pt-BR" });
+    expect(mockedRepository.updateUserLanguage).toHaveBeenCalledWith(user.id, "pt-BR");
   });
 
   it("logs out and clears the session cookie", async () => {

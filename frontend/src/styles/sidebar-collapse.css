@@ -1,0 +1,184 @@
+/* Persistent sidebar collapse. Keep the toggle in the brand row in both states. */
+:root {
+  --sidebar-expanded: 248px;
+  --sidebar-compact: 84px;
+}
+
+.sidebar,
+.main-column {
+  transition: width .22s cubic-bezier(.2, .75, .25, 1), margin-left .22s cubic-bezier(.2, .75, .25, 1);
+}
+
+.sidebar {
+  width: var(--sidebar-expanded);
+}
+
+.main-column {
+  margin-left: var(--sidebar-expanded);
+}
+
+.brand-lockup {
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.brand-ident {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.sidebar-collapse-toggle {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  margin-left: auto;
+  color: var(--color-muted);
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+
+.sidebar-collapse-toggle:hover {
+  color: var(--color-brand);
+  background: var(--color-background);
+}
+
+.sidebar-collapsed .sidebar {
+  width: var(--sidebar-compact);
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.sidebar-collapsed .main-column {
+  margin-left: var(--sidebar-compact);
+}
+
+.sidebar-collapsed .brand-lockup {
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+}
+
+.sidebar-collapsed .brand-ident {
+  flex: 0 0 auto;
+}
+
+.sidebar-collapsed .brand-copy,
+.sidebar-collapsed .workspace-label,
+.sidebar-collapsed .nav-link span,
+.sidebar-collapsed .user-copy,
+.sidebar-collapsed .user-menu,
+.sidebar-collapsed .sidebar-divider {
+  display: none;
+}
+
+.sidebar-collapsed .brand-mark {
+  flex: 0 0 34px;
+}
+
+.sidebar-collapsed .sidebar-collapse-toggle {
+  position: static;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  transform: none;
+}
+
+.sidebar-collapsed .primary-nav {
+  margin-top: 43px;
+}
+
+.sidebar-collapsed .nav-link {
+  justify-content: center;
+  width: 48px;
+  height: 46px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.sidebar-collapsed .nav-link svg {
+  flex: 0 0 auto;
+}
+
+.sidebar-collapsed .nav-link-active::before {
+  left: -10px;
+}
+
+.sidebar-collapsed .sidebar-bottom {
+  margin-top: auto;
+}
+
+.sidebar-collapsed .sidebar-user {
+  justify-content: center;
+  padding: 14px 0 0;
+}
+
+.sidebar-collapsed .sidebar-close {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sidebar-collapse-toggle {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar-close {
+    display: grid;
+  }
+
+  .sidebar,
+  .sidebar-collapsed .sidebar {
+    width: min(290px, 86vw);
+  }
+
+  .main-column,
+  .sidebar-collapsed .main-column {
+    margin-left: 0;
+  }
+
+  .sidebar-collapsed .brand-copy,
+  .sidebar-collapsed .workspace-label,
+  .sidebar-collapsed .nav-link span,
+  .sidebar-collapsed .user-copy,
+  .sidebar-collapsed .user-menu,
+  .sidebar-collapsed .sidebar-divider {
+    display: initial;
+  }
+
+  .sidebar-collapsed .brand-lockup {
+    justify-content: flex-start;
+  }
+
+  .sidebar-collapsed .brand-ident {
+    gap: 11px;
+  }
+
+  .sidebar-collapsed .primary-nav {
+    margin-top: 0;
+  }
+
+  .sidebar-collapsed .nav-link {
+    justify-content: flex-start;
+    width: 100%;
+    margin: 0;
+    padding: 0 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .main-column {
+    transition: none;
+  }
+}

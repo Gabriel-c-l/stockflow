@@ -45,6 +45,8 @@ export const login = async (input: LoginInput) => {
     );
   }
 
+  const language = await authRepository.findUserLanguage(user.id);
+
   const token = createSessionToken();
   const tokenHash = hashSessionToken(token);
   const expiresAt = new Date(
@@ -60,6 +62,7 @@ export const login = async (input: LoginInput) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      language,
       isActive: user.isActive,
       createdAt: user.createdAt,
     },

@@ -7,8 +7,12 @@ import { ProductsPage } from '../features/products/ProductsPage';
 import { StockMovementsPage } from '../features/stock-movements/StockMovementsPage';
 import { SuppliersPage } from '../features/suppliers/SuppliersPage';
 import { LoginPage } from '../features/auth/LoginPage';
+import { UsersPage } from '../features/users/UsersPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 import { stockflowApi } from '../lib/stockflow-api';
 import type { User } from '../lib/types';
+import { updatePreferences } from '../lib/preferences';
+import { TranslateTree } from '../lib/i18n';
 
 function readPath() {
   return window.location.pathname || '/';
@@ -28,7 +32,7 @@ export function App() {
   useEffect(() => {
     let active = true;
     stockflowApi.currentUser()
-      .then(({ user: currentUser }) => { if (active) setUser(currentUser); })
+      .then(({ user: currentUser }) => { if (active) { setUser(currentUser); updatePreferences({ language: currentUser.language === 'pt-BR' ? 'pt-BR' : 'en' }); } })
       .catch(() => { if (active) setUser(null); })
       .finally(() => { if (active) setCheckingSession(false); });
     return () => { active = false; };
@@ -43,6 +47,7 @@ export function App() {
 
   const handleLogin = (authenticatedUser: User) => {
     setUser(authenticatedUser);
+    updatePreferences({ language: authenticatedUser.language === 'pt-BR' ? 'pt-BR' : 'en' });
     navigate('/', true);
   };
 
@@ -55,18 +60,24 @@ export function App() {
   };
 
   if (checkingSession) {
-    return <div className="auth-loading" role="status" aria-live="polite"><span className="auth-loading-mark">S</span><span>Carregando seu ambiente...</span></div>;
+    return <TranslateTree><div className="auth-loading" role="status" aria-live="polite"><span className="auth-loading-mark">S</span><span>Carregando seu ambiente...</span></div></TranslateTree>;
   }
   if (!user || path === '/login') return <LoginPage onLogin={handleLogin} />;
 
   let page = <DashboardPage />;
-  if (path === '/categories') page = <CategoriesPage />;
-  else if (path === '/inventory') page = <ProductsPage />;
+  if (path === '/categories') page = <CategoriesPage canManage={user.role !== 'OPERATOR'} />;
+  else if (path === '/inventory') page = <ProductsPage canManage={user.role !== 'OPERATOR'} />;
   else if (path === '/stock-movements') page = <StockMovementsPage />;
-  else if (path === '/suppliers') page = <SuppliersPage />;
-  else if (path === '/users') page = <PlaceholderPage title="Users & access" description="Manage workspace members and access levels." />;
-  else if (path === '/reports') page = <PlaceholderPage title="Reports" description="Inventory reporting will be connected when the backend module is available." />;
-  else if (path === '/settings') page = <PlaceholderPage title="Settings" description="Workspace preferences and account settings." />;
+  else if (path === '/suppliers') page = <SuppliersPage canManage={user.role !== 'OPERATOR'} />;
+  else if (path === '/users') {
+    if (user.role === 'ADMIN') page = <UsersPage currentUser={user} />;
+    else navigate('/', true);
+  }
+  else if (path === '/reports') {
+    if (user.role !== 'OPERATOR') page = <PlaceholderPage title="Reports" description="Inventory reporting will be connected when the backend module is available." />;
+    else navigate('/', true);
+  }
+  else if (path === '/settings') page = <SettingsPage user={user} />;
 
   return <AppShell user={user} currentPath={path} onNavigate={navigate} onLogout={handleLogout}>{page}</AppShell>;
 }

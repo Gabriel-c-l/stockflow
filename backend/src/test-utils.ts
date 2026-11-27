@@ -7,6 +7,7 @@ const testAuthentication: RequestHandler = (request, _response, next) => {
     name: "Test Administrator",
     email: "test-admin@example.invalid",
     role: "ADMIN",
+    language: "en",
     isActive: true,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
   };

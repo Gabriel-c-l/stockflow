@@ -1,3 +1,6 @@
+import { getPreferences } from './preferences';
+import { translate } from './i18n';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 const GET_CACHE_TTL_MS = 15_000;
 const getCache = new Map<string, { expiresAt: number; value: unknown }>();
@@ -17,7 +20,7 @@ const fieldLabels: Record<string, string> = {
   recipient: 'Destinatário', unitCost: 'Custo unitário', status: 'Status', page: 'Página', pageSize: 'Itens por página',
 };
 
-function translateIssue(issue: ApiValidationIssue): string {
+function translateIssue(issue: ApiValidationIssue): { field: string; message: string } {
   const field = issue.path?.length ? fieldLabels[String(issue.path[0])] ?? String(issue.path[0]) : 'Dados';
   const raw = issue.message ?? '';
   let message = raw;
@@ -33,7 +36,7 @@ function translateIssue(issue: ApiValidationIssue): string {
   else if (/at least one field/i.test(raw)) message = 'Informe pelo menos um campo para atualizar.';
   else if (/unrecognized key/i.test(raw)) message = 'Há um campo não reconhecido no formulário.';
   else if (!raw) message = 'Verifique o valor informado.';
-  return `${field}: ${message}`;
+  return { field, message };
 }
 
 function translateServerMessage(message: string | undefined, status: number): string {
@@ -86,10 +89,12 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
     if (!response.ok) {
       const payload = await response.json().catch(() => null) as { error?: string; details?: ApiValidationIssue[] } | null;
       const details = Array.isArray(payload?.details) ? payload.details : [];
-      const translated = details.map(translateIssue);
-      const baseMessage = translateServerMessage(payload?.error, response.status);
-      const message = translated.length
-        ? `${baseMessage}\\n${translated.map((item) => `• ${item}`).join('\\n')}`
+      const language = getPreferences().language;
+      const issues = details.map(translateIssue);
+      const baseMessage = translate(translateServerMessage(payload?.error, response.status), language);
+      const localizedIssues = issues.map((item) => `${translate(item.field, language)}: ${translate(item.message, language)}`);
+      const message = localizedIssues.length
+        ? `${baseMessage}\n${localizedIssues.map((item) => `• ${item}`).join('\n')}`
         : baseMessage;
       throw new ApiError(message, response.status, details);
     }

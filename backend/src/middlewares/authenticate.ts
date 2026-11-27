@@ -32,11 +32,13 @@ export const authenticate = async (
     return;
   }
 
+  const language = await authRepository.findUserLanguage(session.user.id);
   request.authUser = {
     id: session.user.id,
     name: session.user.name,
     email: session.user.email,
     role: session.user.role,
+    language,
     isActive: session.user.isActive,
     createdAt: session.user.createdAt,
   };

@@ -5,6 +5,7 @@ import { login, logout } from "./services/auth.service";
 vi.mock("./repositories/auth.repository", () => ({
   findUserByEmail: vi.fn(),
   findUserById: vi.fn(),
+  findUserLanguage: vi.fn().mockResolvedValue("en"),
   createSession: vi.fn(),
   findActiveSession: vi.fn(),
   revokeSession: vi.fn(),
@@ -27,6 +28,7 @@ const user = {
   email: "user@example.invalid",
   passwordHash: "argon2id$synthetic",
   role: "OPERATOR" as const,
+  language: "en",
   isActive: true,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -35,6 +37,7 @@ const user = {
 describe("AuthService unit tests", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedRepository.findUserLanguage.mockResolvedValue("en");
   });
 
   it("logs in a valid active user and creates a session", async () => {
@@ -56,6 +59,7 @@ describe("AuthService unit tests", () => {
 
     expect(result.token).toEqual(expect.any(String));
     expect(result.user).not.toHaveProperty("passwordHash");
+    expect(result.user.language).toBe("en");
     expect(mockedRepository.createSession).toHaveBeenCalledOnce();
   });
 

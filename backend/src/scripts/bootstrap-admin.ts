@@ -4,6 +4,16 @@ import { bootstrapAdmin } from "../services/bootstrap-admin.service";
 import { z } from "zod";
 
 const main = async (): Promise<void> => {
+  // Once an administrator exists, bootstrap credentials are no longer needed.
+  const existingAdmin = await prisma.user.findFirst({
+    where: { role: "ADMIN" },
+    select: { id: true },
+  });
+  if (existingAdmin) {
+    console.log("Bootstrap skipped: an administrator already exists.");
+    return;
+  }
+
   const name = process.env.BOOTSTRAP_ADMIN_NAME?.trim();
   const email = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;

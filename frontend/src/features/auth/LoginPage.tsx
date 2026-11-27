@@ -2,6 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { ApiError } from '../../lib/api';
 import { stockflowApi } from '../../lib/stockflow-api';
 import type { User } from '../../lib/types';
+import { useI18n, TranslateTree } from '../../lib/i18n';
+import { Icon } from '../../components/ui/Icon';
+import { updatePreferences, usePreferences } from '../../lib/preferences';
 
 type LoginPageProps = {
   onLogin: (user: User) => void;
@@ -31,6 +34,9 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [helpMessage, setHelpMessage] = useState('');
+  const { language, setLanguage } = useI18n();
+  const { theme } = usePreferences();
+  const themeToggleLabel = theme === 'dark' ? 'Mudar para modo claro' : 'Mudar para modo escuro';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,6 +65,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
+    <TranslateTree>
     <main className="auth-page">
       <section className="auth-brand-panel" aria-label="Sobre o StockFlow">
         <div className="auth-brand-mark">S</div>
@@ -85,6 +92,26 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
       <section className="auth-form-panel">
         <div className="auth-form-content">
+          <div className="auth-top-controls">
+            <div className="auth-language-control">
+              <label htmlFor="login-language">Idioma</label>
+              <select id="login-language" value={language} onChange={(event) => setLanguage(event.target.value as 'pt-BR' | 'en')}>
+                <option value="en">English</option>
+                <option value="pt-BR">Português (Brasil)</option>
+              </select>
+            </div>
+            <button
+              className="auth-theme-toggle"
+              type="button"
+              onClick={() => updatePreferences({ theme: theme === 'dark' ? 'light' : 'dark' })}
+              aria-label={themeToggleLabel}
+              aria-pressed={theme === 'dark'}
+              title={themeToggleLabel}
+            >
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
+              <span>{theme === 'dark' ? 'Claro' : 'Escuro'}</span>
+            </button>
+          </div>
           <header className="auth-form-heading">
             <h2>Sign in</h2>
             <p>Enter your account details below.</p>
@@ -155,5 +182,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         <p className="auth-legal">By continuing, you agree to the Terms of Service and Privacy Policy.</p>
       </section>
     </main>
+    </TranslateTree>
   );
 }
