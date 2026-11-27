@@ -73,15 +73,16 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
+          # SonarQube Cloud auto-detects test files by naming conventions.
+          # k6 tooling remains statically analyzed, but is excluded from the
+          # application coverage denominator because Vitest LCOV covers src/.
+          # Prisma migrations are PostgreSQL schema history, not PL/SQL source.
           args: >-
             -Dsonar.organization=gabriel-c-l
             -Dsonar.projectKey=Gabriel-c-l_stockflow
             -Dsonar.projectBaseDir=backend
-            -Dsonar.sources=src
-            -Dsonar.tests=src,performance
-            -Dsonar.test.inclusions=src/**/*.test.ts,performance/**
-            -Dsonar.exclusions=src/**/*.test.ts,src/generated/prisma/**
-            -Dsonar.coverage.exclusions=src/scripts/**,src/test-utils.ts,src/types/express.d.ts
+            -Dsonar.exclusions=src/generated/prisma/**,prisma/migrations/**
+            -Dsonar.coverage.exclusions=src/scripts/**,src/test-utils.ts,src/types/express.d.ts,performance/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300
